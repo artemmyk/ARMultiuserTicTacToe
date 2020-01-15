@@ -161,7 +161,7 @@ class ViewController: UIViewController, ARSessionDelegate {
     func peerDiscovered(_ peer: MCPeerID) -> Bool {
         guard let multipeerSession = multipeerSession else { return false }
         
-        if multipeerSession.connectedPeers.count > 4 {
+        if multipeerSession.connectedPeers.count > 3 {
             // Do not accept more than four users in the experience.
             messageLabel.displayMessage("A fifth peer wants to join the experience.\nThis app is limited to four users.", duration: 6.0)
             return false
