@@ -195,4 +195,4 @@ The sample app uses common ARKit techniques to place virtual objects. For more i
 [10]:https://developer.apple.com/documentation/arkit/aranchor/3214025-sessionidentifier
 [11]:https://developer.apple.com/documentation/arkit/arsession/3214028-identifier
 [12]:https://developer.apple.com/documentation/arkit/arworldtrackingconfiguration
-[13]:https://developer.apple.com/documentation/arkit/placing_objects_and_handling_3d_interaction
+[13]:https://developer.apple.com/documentation/arkit/world_tracking/placing_objects_and_handling_3d_interaction
