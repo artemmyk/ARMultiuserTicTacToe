@@ -9,6 +9,7 @@ import UIKit
 import RealityKit
 import ARKit
 import MultipeerConnectivity
+import Combine
 
 class ViewController: UIViewController, ARSessionDelegate {
     
@@ -27,6 +28,9 @@ class ViewController: UIViewController, ARSessionDelegate {
     var sessionIDObservation: NSKeyValueObservation?
     
     var configuration: ARWorldTrackingConfiguration?
+    
+    var boardEntity: ModelEntity!
+    private var cancellables: Set<AnyCancellable> = []
 
     override func viewDidAppear(_ animated: Bool) {
         
@@ -69,6 +73,8 @@ class ViewController: UIViewController, ARSessionDelegate {
 
         arView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap(recognizer:))))
         
+        addBoardEntity(in: arView.scene, arView: arView)
+        
         messageLabel.displayMessage("Tap the screen to place cubes.\nInvite others to launch this app to join you.", duration: 60.0)
     }
     
@@ -77,7 +83,7 @@ class ViewController: UIViewController, ARSessionDelegate {
         let location = recognizer.location(in: arView)
         
         // Attempt to find a 3D location on a horizontal surface underneath the user's touch location.
-        let results = arView.raycast(from: location, allowing: .estimatedPlane, alignment: .horizontal)
+        let results = arView.raycast(from: location, allowing: .estimatedPlane, alignment: .any)
         if let firstResult = results.first {
             // Add an ARAnchor at the touch location with a special name you check later in `session(_:didAdd:)`.
             let anchor = ARAnchor(name: "Anchor for object placement", transform: firstResult.worldTransform)
@@ -106,20 +112,27 @@ class ViewController: UIViewController, ARSessionDelegate {
                 
                 arView.scene.addAnchor(anchorEntity)
             } else if anchor.name == "Anchor for object placement" {
-                // Create a cube at the location of the anchor.
-                let boxLength: Float = 0.05
-                // Color the cube based on the user that placed it.
-                let color = anchor.sessionIdentifier?.toRandomColor() ?? .white
-                let coloredCube = ModelEntity(mesh: MeshResource.generateBox(size: boxLength),
-                                              materials: [SimpleMaterial(color: color, isMetallic: true)])
-                // Offset the cube by half its length to align its bottom with the real-world surface.
-                coloredCube.position = [0, boxLength / 2, 0]
-                
-                // Attach the cube to the ARAnchor via an AnchorEntity.
-                //   World origin -> ARAnchor -> AnchorEntity -> ModelEntity
                 let anchorEntity = AnchorEntity(anchor: anchor)
-                anchorEntity.addChild(coloredCube)
+                anchorEntity.setScale(SIMD3<Float>(0.002, 0.002, 0.002), relativeTo: anchorEntity)
+
+                anchorEntity.addChild(self.boardEntity)
+                
                 arView.scene.addAnchor(anchorEntity)
+                
+//                // Create a cube at the location of the anchor.
+//                let boxLength: Float = 0.05
+//                // Color the cube based on the user that placed it.
+//                let color = anchor.sessionIdentifier?.toRandomColor() ?? .white
+//                let coloredCube = ModelEntity(mesh: MeshResource.generateBox(size: boxLength),
+//                                              materials: [SimpleMaterial(color: color, isMetallic: true)])
+//                // Offset the cube by half its length to align its bottom with the real-world surface.
+//                coloredCube.position = [0, boxLength / 2, 0]
+//                
+//                // Attach the cube to the ARAnchor via an AnchorEntity.
+//                //   World origin -> ARAnchor -> AnchorEntity -> ModelEntity
+//                let anchorEntity = AnchorEntity(anchor: anchor)
+//                anchorEntity.addChild(coloredCube)
+//                arView.scene.addAnchor(anchorEntity)
             }
         }
     }
@@ -246,5 +259,23 @@ class ViewController: UIViewController, ARSessionDelegate {
         if let commandData = command.data(using: .utf8) {
             multipeerSession.sendToPeers(commandData, reliably: true, peers: peers)
         }
+    }
+}
+
+// MARK: - ModelEntities
+extension ViewController {
+    func addBoardEntity(in scene: RealityKit.Scene, arView: ARView) {
+        ModelEntity.loadModelAsync(named: "Board")
+            .sink(
+                receiveCompletion: { completion in },
+                receiveValue: { [weak self] entity in
+                    guard let self = self else { return }
+                    entity.name = "Board"
+                    entity.generateCollisionShapes(recursive: true)
+                    arView.installGestures(.all, for: entity)
+                    self.boardEntity = entity
+                }
+            )
+            .store(in: &cancellables)
     }
 }

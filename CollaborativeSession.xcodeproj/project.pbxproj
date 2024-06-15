@@ -16,6 +16,7 @@
 		0C968A53230DD14F00B415B3 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C968A52230DD14F00B415B3 /* Utilities.swift */; };
 		0CCDFA76230F13570095AFDB /* MessageLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CCDFA75230F13570095AFDB /* MessageLabel.swift */; };
 		0CCDFA78230F1BF70095AFDB /* ViewController+CoachingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CCDFA77230F1BF70095AFDB /* ViewController+CoachingOverlay.swift */; };
+		1E0789952C1DEABC005C6C34 /* Board.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 1E0789942C1DEABC005C6C34 /* Board.usdz */; };
 		718D2AFC233153EF0075B672 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 718D2AFB233153EF0075B672 /* README.md */; };
 /* End PBXBuildFile section */
 
@@ -31,9 +32,10 @@
 		0C968A52230DD14F00B415B3 /* Utilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		0CCDFA75230F13570095AFDB /* MessageLabel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageLabel.swift; sourceTree = "<group>"; };
 		0CCDFA77230F1BF70095AFDB /* ViewController+CoachingOverlay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ViewController+CoachingOverlay.swift"; sourceTree = "<group>"; };
+		1E0789942C1DEABC005C6C34 /* Board.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Board.usdz; sourceTree = "<group>"; };
 		718D2AFB233153EF0075B672 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		79A3D4B5FDAD8799EE5A506F /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE.txt; sourceTree = "<group>"; };
-		B40803DB8FC0BFFCE474F17F /* SampleCode.xcconfig */ = {isa = PBXFileReference; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
+		79A3D4B5FDAD8799EE5A506F /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		B40803DB8FC0BFFCE474F17F /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +71,7 @@
 		0C34B3CB23077FC2005DB76E /* CollaborativeSession */ = {
 			isa = PBXGroup;
 			children = (
+				1E0789942C1DEABC005C6C34 /* Board.usdz */,
 				0C34B3CC23077FC2005DB76E /* AppDelegate.swift */,
 				0C34B3CE23077FC2005DB76E /* ViewController.swift */,
 				0CCDFA77230F1BF70095AFDB /* ViewController+CoachingOverlay.swift */,
@@ -96,7 +99,6 @@
 			children = (
 				79A3D4B5FDAD8799EE5A506F /* LICENSE.txt */,
 			);
-			name = LICENSE;
 			path = LICENSE;
 			sourceTree = "<group>";
 		};
@@ -160,6 +162,7 @@
 			files = (
 				0C34B3D923077FC5005DB76E /* LaunchScreen.storyboard in Resources */,
 				0C34B3D623077FC5005DB76E /* Assets.xcassets in Resources */,
+				1E0789952C1DEABC005C6C34 /* Board.usdz in Resources */,
 				718D2AFC233153EF0075B672 /* README.md in Resources */,
 				0C34B3D423077FC2005DB76E /* Main.storyboard in Resources */,
 			);
@@ -325,7 +328,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 9M66W82D7X;
 				INFOPLIST_FILE = CollaborativeSession/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -346,7 +349,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 9M66W82D7X;
 				INFOPLIST_FILE = CollaborativeSession/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
