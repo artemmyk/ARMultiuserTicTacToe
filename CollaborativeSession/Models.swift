@@ -76,6 +76,7 @@ enum Command: String {
 }
 
 struct Constants {
+    static let boardSize: Float = 136.98
     static let oneThirdBoardSize: Float = 45.66
     
     static let commandDataSeparator  = ":"

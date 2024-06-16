@@ -104,6 +104,8 @@ class ViewController: UIViewController {
                 let anchor = ARAnchor(name: "Anchor for object placement", transform: firstResult.worldTransform)
                 arView.session.add(anchor: anchor)
                 
+                startGameHandler()
+                
                 return
             }
             
@@ -205,7 +207,7 @@ extension ViewController: ARSessionDelegate {
                 
 //                startButton.isHidden = false
 //                messageLabel.displayMessage("Press the start button to start the game.")
-                startGameHandler()
+//                startGameHandler()
             }
         }
     }
@@ -444,7 +446,6 @@ extension ViewController {
         
         restartGame()
         sendCommand(Command.gameRestarted)
-        messageLabel.displayMessage("It's your turn.")
     }
     
     func restartGame() {
@@ -464,7 +465,7 @@ extension ViewController {
             self.gameAnchor = nil
         }
         
-        messageLabel.displayMessage("It's your opponent's turn.")
+        messageLabel.displayMessage("Place the grid to start the game.")
     }
     
     func resetTracking() {
