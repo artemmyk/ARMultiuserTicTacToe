@@ -12,7 +12,7 @@ import MultipeerConnectivity
 import Combine
 import SwiftUI
 
-class ViewController: UIViewController, ARSessionDelegate {
+class ViewController: UIViewController {
     
     @IBOutlet var arView: ARView!
     @IBOutlet weak var messageLabel: MessageLabel!
@@ -82,8 +82,7 @@ class ViewController: UIViewController, ARSessionDelegate {
         setupCoachingOverlay()
         
         // Start looking for other players via MultiPeerConnectivity.
-        multipeerSession = MultipeerSession(receivedDataHandler: receivedData, peerJoinedHandler:
-                                            peerJoined, peerLeftHandler: peerLeft, peerDiscoveredHandler: peerDiscovered)
+        multipeerSession = MultipeerSession(delegate: self)
         
         // Prevent the screen from being dimmed to avoid interrupting the AR experience.
         UIApplication.shared.isIdleTimerDisabled = true
@@ -123,6 +122,65 @@ class ViewController: UIViewController, ARSessionDelegate {
         }
     }
     
+    @IBAction func resetTracking() {
+        print("resetTracking()")
+        
+        guard let configuration = arView.session.configuration else { print("A configuration is required"); return }
+        arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+    }
+    
+    override var prefersStatusBarHidden: Bool {
+        // Request that iOS hide the status bar to improve immersiveness of the AR experience.
+        return true
+    }
+    
+    override var prefersHomeIndicatorAutoHidden: Bool {
+        // Request that iOS hide the home indicator to improve immersiveness of the AR experience.
+        return true
+    }
+    
+    private func removeAllAnchorsOriginatingFromARSessionWithID(_ identifier: String) {
+        print("removeAllAnchorsOriginatingFromARSessionWithID(_ identifier: String)")
+        
+        guard let frame = arView.session.currentFrame else { return }
+        for anchor in frame.anchors {
+            guard let anchorSessionID = anchor.sessionIdentifier else { continue }
+            if anchorSessionID.uuidString == identifier {
+                arView.session.remove(anchor: anchor)
+            }
+        }
+    }
+    
+}
+
+// MARK: - Data Communication
+extension ViewController {
+    
+    private func sendARSessionIDTo(peers: [MCPeerID]) {
+        print("sendARSessionIDTo(peers: [MCPeerID])")
+        
+        guard let multipeerSession = multipeerSession else { return }
+        let idString = arView.session.identifier.uuidString
+        let command = "SessionID:" + idString
+        if let commandData = command.data(using: .utf8) {
+            multipeerSession.sendToPeers(commandData, reliably: true, peers: peers)
+        }
+    }
+    
+    func sendEntityPlacementData(position: XOPosition) {
+        print("sendEntityPlacementData(position: XOPosition)")
+        
+        guard let multipeerSession = multipeerSession else { return }
+        let command = "PlacedAt:" + position.rawValue
+        if let commandData = command.data(using: .utf8) {
+            multipeerSession.sendToAllPeers(commandData, reliably: true)
+        }
+    }
+    
+}
+
+// MARK: - ARSessionDelegate
+extension ViewController: ARSessionDelegate {
     func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
         print("session(_ session: ARSession, didAdd anchors: [ARAnchor])")
         
@@ -173,7 +231,37 @@ class ViewController: UIViewController, ARSessionDelegate {
             print("Deferred sending collaboration to later because there are no peers.")
         }
     }
+    
+    func session(_ session: ARSession, didFailWithError error: Error) {
+        print("session(_ session: ARSession, didFailWithError error: Error)")
+        
+        guard error is ARError else { return }
+        
+        let errorWithInfo = error as NSError
+        let messages = [
+            errorWithInfo.localizedDescription,
+            errorWithInfo.localizedFailureReason,
+            errorWithInfo.localizedRecoverySuggestion
+        ]
+        
+        // Remove optional error messages.
+        let errorMessage = messages.compactMap({ $0 }).joined(separator: "\n")
+        
+        DispatchQueue.main.async {
+            // Present the error that occurred.
+            let alertController = UIAlertController(title: "The AR session failed.", message: errorMessage, preferredStyle: .alert)
+            let restartAction = UIAlertAction(title: "Restart Session", style: .default) { _ in
+                alertController.dismiss(animated: true, completion: nil)
+                self.resetTracking()
+            }
+            alertController.addAction(restartAction)
+            self.present(alertController, animated: true, completion: nil)
+        }
+    }
+}
 
+// MARK: - MultipeerSessionDelegate
+extension ViewController: MultipeerSessionDelegate {
     func receivedData(_ data: Data, from peer: MCPeerID) {
         print("receivedData(_ data: Data, from peer: MCPeerID)")
 
@@ -246,89 +334,6 @@ class ViewController: UIViewController, ARSessionDelegate {
             peerSessionIDs.removeValue(forKey: peer)
         }
     }
-    
-    func session(_ session: ARSession, didFailWithError error: Error) {
-        print("session(_ session: ARSession, didFailWithError error: Error)")
-        
-        guard error is ARError else { return }
-        
-        let errorWithInfo = error as NSError
-        let messages = [
-            errorWithInfo.localizedDescription,
-            errorWithInfo.localizedFailureReason,
-            errorWithInfo.localizedRecoverySuggestion
-        ]
-        
-        // Remove optional error messages.
-        let errorMessage = messages.compactMap({ $0 }).joined(separator: "\n")
-        
-        DispatchQueue.main.async {
-            // Present the error that occurred.
-            let alertController = UIAlertController(title: "The AR session failed.", message: errorMessage, preferredStyle: .alert)
-            let restartAction = UIAlertAction(title: "Restart Session", style: .default) { _ in
-                alertController.dismiss(animated: true, completion: nil)
-                self.resetTracking()
-            }
-            alertController.addAction(restartAction)
-            self.present(alertController, animated: true, completion: nil)
-        }
-    }
-    
-    @IBAction func resetTracking() {
-        print("resetTracking()")
-        
-        guard let configuration = arView.session.configuration else { print("A configuration is required"); return }
-        arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
-    }
-    
-    override var prefersStatusBarHidden: Bool {
-        // Request that iOS hide the status bar to improve immersiveness of the AR experience.
-        return true
-    }
-    
-    override var prefersHomeIndicatorAutoHidden: Bool {
-        // Request that iOS hide the home indicator to improve immersiveness of the AR experience.
-        return true
-    }
-    
-    private func removeAllAnchorsOriginatingFromARSessionWithID(_ identifier: String) {
-        print("removeAllAnchorsOriginatingFromARSessionWithID(_ identifier: String)")
-        
-        guard let frame = arView.session.currentFrame else { return }
-        for anchor in frame.anchors {
-            guard let anchorSessionID = anchor.sessionIdentifier else { continue }
-            if anchorSessionID.uuidString == identifier {
-                arView.session.remove(anchor: anchor)
-            }
-        }
-    }
-    
-}
-
-// MARK: - Data Communication
-extension ViewController {
-    
-    private func sendARSessionIDTo(peers: [MCPeerID]) {
-        print("sendARSessionIDTo(peers: [MCPeerID])")
-        
-        guard let multipeerSession = multipeerSession else { return }
-        let idString = arView.session.identifier.uuidString
-        let command = "SessionID:" + idString
-        if let commandData = command.data(using: .utf8) {
-            multipeerSession.sendToPeers(commandData, reliably: true, peers: peers)
-        }
-    }
-    
-    func sendEntityPlacementData(position: XOPosition) {
-        print("sendEntityPlacementData(position: XOPosition)")
-        
-        guard let multipeerSession = multipeerSession else { return }
-        let command = "PlacedAt:" + position.rawValue
-        if let commandData = command.data(using: .utf8) {
-            multipeerSession.sendToAllPeers(commandData, reliably: true)
-        }
-    }
-    
 }
 
 // MARK: - ModelEntities

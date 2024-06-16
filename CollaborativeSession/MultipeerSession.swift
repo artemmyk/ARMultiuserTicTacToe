@@ -7,6 +7,13 @@ A simple abstraction of the MultipeerConnectivity API as used in this app.
 
 import MultipeerConnectivity
 
+protocol MultipeerSessionDelegate {
+    func receivedData(_ data: Data, from peer: MCPeerID) -> Void
+    func peerDiscovered(_ peer: MCPeerID) -> Bool
+    func peerJoined(_ peer: MCPeerID) -> Void
+    func peerLeft(_ peer: MCPeerID) -> Void
+}
+
 /// - Tag: MultipeerSession
 class MultipeerSession: NSObject {
     static let serviceType = "ar-collab"
@@ -16,20 +23,11 @@ class MultipeerSession: NSObject {
     private var serviceAdvertiser: MCNearbyServiceAdvertiser!
     private var serviceBrowser: MCNearbyServiceBrowser!
     
-    private let receivedDataHandler: (Data, MCPeerID) -> Void
-    private let peerJoinedHandler: (MCPeerID) -> Void
-    private let peerLeftHandler: (MCPeerID) -> Void
-    private let peerDiscoveredHandler: (MCPeerID) -> Bool
+    private var delegate: MultipeerSessionDelegate
 
     /// - Tag: MultipeerSetup
-    init(receivedDataHandler: @escaping (Data, MCPeerID) -> Void,
-         peerJoinedHandler: @escaping (MCPeerID) -> Void,
-         peerLeftHandler: @escaping (MCPeerID) -> Void,
-         peerDiscoveredHandler: @escaping (MCPeerID) -> Bool) {
-        self.receivedDataHandler = receivedDataHandler
-        self.peerJoinedHandler = peerJoinedHandler
-        self.peerLeftHandler = peerLeftHandler
-        self.peerDiscoveredHandler = peerDiscoveredHandler
+    init(delegate: MultipeerSessionDelegate) {
+        self.delegate = delegate
         
         super.init()
         
@@ -68,14 +66,14 @@ extension MultipeerSession: MCSessionDelegate {
     
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         if state == .connected {
-            peerJoinedHandler(peerID)
+            delegate.peerJoined(peerID)
         } else if state == .notConnected {
-            peerLeftHandler(peerID)
+            delegate.peerLeft(peerID)
         }
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        receivedDataHandler(data, peerID)
+        delegate.receivedData(data, from: peerID)
     }
     
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String,
@@ -100,7 +98,7 @@ extension MultipeerSession: MCNearbyServiceBrowserDelegate {
     /// - Tag: FoundPeer
     public func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
         // Ask the handler whether we should invite this peer or not
-        let accepted = peerDiscoveredHandler(peerID)
+        let accepted = delegate.peerDiscovered(peerID)
         if accepted {
             browser.invitePeer(peerID, to: session, withContext: nil, timeout: 10)
         }
