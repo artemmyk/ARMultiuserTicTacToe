@@ -32,7 +32,8 @@ class ViewController: UIViewController {
     var configuration: ARWorldTrackingConfiguration?
     
     //
-    private var isXTurn = true
+    private var isPlayersTurn = false
+    private var playersModel: String?
     private var boardValues = [XOPosition: XOModel]()
     private var cancellables: Set<AnyCancellable> = []
     
@@ -90,7 +91,7 @@ class ViewController: UIViewController {
         
         addBoardEntity(in: arView.scene, arView: arView)
         
-        messageLabel.displayMessage("Tap the screen to place cubes.\nInvite others to launch this app to join you.", duration: 60.0)
+        messageLabel.displayMessage("Tap the screen to place the grid.\nInvite others to launch this app to join you.", duration: 60.0)
     }
     
     @objc
@@ -110,8 +111,10 @@ class ViewController: UIViewController {
             
             guard isGameOver == false else { return }
             guard isLoadingXOEntity == false else { return }
-            if let entity = arView.entity(at: location) as? ModelEntity, let position = XOPosition(rawValue: entity.name) {
-                addXOEntity(in: entity, at: position)
+            if isPlayersTurn,
+               let entity = arView.entity(at: location) as? ModelEntity,
+               let position = XOPosition(rawValue: entity.name) {
+                addXOEntity(in: entity, at: position, isX: playersModel == AssetReference.x.rawValue)
                 sendCommand(Command.placedAt, data: position.rawValue)
             }
             
@@ -292,7 +295,7 @@ extension ViewController: MultipeerSessionDelegate {
             if let position = XOPosition(rawValue: placedAtPositionRawValue),
                let entity = arView.scene.findEntity(named: position.rawValue) as? ModelEntity {
                 DispatchQueue.main.async {
-                    self.addXOEntity(in: entity, at: position)
+                    self.addXOEntity(in: entity, at: position, isX: self.playersModel != AssetReference.x.rawValue)
                 }
             }
         case Command.gameRestarted:
@@ -360,7 +363,7 @@ extension ViewController {
             .store(in: &cancellables)
     }
     
-    func addXOEntity(in entity: ModelEntity, at position: XOPosition) {
+    func addXOEntity(in entity: ModelEntity, at position: XOPosition, isX: Bool) {
         print("addXOEntity(in entity: ModelEntity, at position: XOPosition)")
         
         let entityHasNoValue = boardEntity.children.first {
@@ -370,7 +373,8 @@ extension ViewController {
         guard entityHasNoValue else { return }
         isLoadingXOEntity = true
         
-        ModelEntity.loadModelAsync(named: (isXTurn ? AssetReference.x : AssetReference.o).rawValue)
+        let modelName = (isX ? AssetReference.x : AssetReference.o).rawValue
+        ModelEntity.loadModelAsync(named: modelName)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     self?.isLoadingXOEntity = false
@@ -382,13 +386,13 @@ extension ViewController {
                 },
                 receiveValue: { [weak self] xoEntity in
                     guard let self = self else { return }
-                    xoEntity.name = (self.isXTurn ? AssetReference.x : AssetReference.o).rawValue
+                    xoEntity.name = modelName
                     entity.addChild(xoEntity)
                     
-                    self.boardValues[position] = XOModel(isX: self.isXTurn, entity: xoEntity)
+                    self.boardValues[position] = XOModel(isX: isX, entity: xoEntity)
                     
                     self.checkGameStatus()
-                    self.isXTurn.toggle()
+                    self.isPlayersTurn.toggle()
                     self.isLoadingXOEntity = false
                     
                 }
@@ -418,12 +422,16 @@ extension ViewController {
         print("startGameHandler()")
         
         startGame()
+        playersModel = AssetReference.x.rawValue
+        isPlayersTurn = true
         sendCommand(Command.gameStarted)
     }
     
     func startGame() {
         print("startGame()")
                 
+        playersModel = AssetReference.o.rawValue
+        isPlayersTurn = false
         startButton.isHidden = true
         withAnimation { isAdjustBoardPresented = false }
         XOPosition.allCases.forEach(generateTapEntity)
@@ -440,7 +448,8 @@ extension ViewController {
     func restartGame() {
         print("restartGame()")
         
-        isXTurn = true
+        playersModel = AssetReference.o.rawValue
+        isPlayersTurn = false
         boardValues.removeAll()
         withAnimation {
             isGameOver = false
@@ -475,8 +484,10 @@ extension ViewController {
     private func animateEntities(positions: [XOPosition]) {
         for position in positions {
             guard let xoEntity = boardValues[position]?.entity else { continue }
+            let isEntityX = xoEntity.name == AssetReference.x.rawValue
+            
             var translation = xoEntity.transform
-            translation.translation = SIMD3(SCNVector3(0, self.isXTurn ? 14 : 18, 0))
+            translation.translation = SIMD3(SCNVector3(0, isEntityX ? 14 : 18, 0))
             xoEntity.move(to: translation, relativeTo: xoEntity.parent, duration: 0.3, timingFunction: .easeInOut)
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
