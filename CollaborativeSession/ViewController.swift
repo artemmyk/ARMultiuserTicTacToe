@@ -10,12 +10,14 @@ import RealityKit
 import ARKit
 import MultipeerConnectivity
 import Combine
+import SwiftUI
 
 class ViewController: UIViewController, ARSessionDelegate {
     
     @IBOutlet var arView: ARView!
     @IBOutlet weak var messageLabel: MessageLabel!
     @IBOutlet weak var restartButton: UIButton!
+    @IBOutlet weak var startButton: UIButton!
     
     var multipeerSession: MultipeerSession?
     
@@ -29,8 +31,20 @@ class ViewController: UIViewController, ARSessionDelegate {
     
     var configuration: ARWorldTrackingConfiguration?
     
-    var boardEntity: ModelEntity!
+    //
+    private var isXTurn = true
+    private var boardValues = [XOPosition: XOModel]()
     private var cancellables: Set<AnyCancellable> = []
+    
+    var boardEntity: ModelEntity!
+    var gameAnchor: AnchorEntity?
+    var restartGameAction: (() -> Void)?
+    var removeEditBoardGesturesAction: (() -> Void)?
+
+    @Published var isGameOver = false
+    @Published var isTapScreenPresented = true
+    @Published var isAdjustBoardPresented = false
+    @Published var isLoadingXOEntity = false
 
     override func viewDidAppear(_ animated: Bool) {
         
@@ -83,14 +97,26 @@ class ViewController: UIViewController, ARSessionDelegate {
     
     @objc
     func handleTap(recognizer: UITapGestureRecognizer) {
+        print("handleTap(recognizer: UITapGestureRecognizer)")
+        
         let location = recognizer.location(in: arView)
         
         // Attempt to find a 3D location on a horizontal surface underneath the user's touch location.
         let results = arView.raycast(from: location, allowing: .estimatedPlane, alignment: .any)
         if let firstResult = results.first {
-            // Add an ARAnchor at the touch location with a special name you check later in `session(_:didAdd:)`.
-            let anchor = ARAnchor(name: "Anchor for object placement", transform: firstResult.worldTransform)
-            arView.session.add(anchor: anchor)
+            if gameAnchor == nil {
+                // Add an ARAnchor at the touch location with a special name you check later in `session(_:didAdd:)`.
+                let anchor = ARAnchor(name: "Anchor for object placement", transform: firstResult.worldTransform)
+                arView.session.add(anchor: anchor)
+                
+                return
+            }
+            
+            guard isGameOver == false else { return }
+            guard isLoadingXOEntity == false else { return }
+            if let entity = arView.entity(at: location) as? ModelEntity, let position = XOPosition(rawValue: entity.name) {
+                addXOEntity(in: entity, at: position)
+            }
             
         } else {
             messageLabel.displayMessage("Can't place object - no surface found.\nLook for flat surfaces.", duration: 2.0)
@@ -99,6 +125,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     }
     
     func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
+        print("session(_ session: ARSession, didAdd anchors: [ARAnchor])")
+        
         for anchor in anchors {
             if let participantAnchor = anchor as? ARParticipantAnchor {
                 messageLabel.displayMessage("Established joint experience with a peer.")
@@ -121,6 +149,12 @@ class ViewController: UIViewController, ARSessionDelegate {
                 anchorEntity.addChild(self.boardEntity)
                 
                 arView.scene.addAnchor(anchorEntity)
+                gameAnchor = anchorEntity
+                
+                withAnimation {
+                    isTapScreenPresented = false
+                    isAdjustBoardPresented = true
+                }
                 
 //                // Create a cube at the location of the anchor.
 //                let boxLength: Float = 0.05
@@ -142,6 +176,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     
     /// - Tag: DidOutputCollaborationData
     func session(_ session: ARSession, didOutputCollaborationData data: ARSession.CollaborationData) {
+        print("session(_ session: ARSession, didOutputCollaborationData data: ARSession.CollaborationData)")
+        
         guard let multipeerSession = multipeerSession else { return }
         if !multipeerSession.connectedPeers.isEmpty {
             guard let encodedData = try? NSKeyedArchiver.archivedData(withRootObject: data, requiringSecureCoding: true)
@@ -155,6 +191,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     }
 
     func receivedData(_ data: Data, from peer: MCPeerID) {
+        print("receivedData(_ data: Data, from peer: MCPeerID))")
+        
         if let collaborationData = try? NSKeyedUnarchiver.unarchivedObject(ofClass: ARSession.CollaborationData.self, from: data) {
             arView.session.update(with: collaborationData)
             return
@@ -175,6 +213,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     }
     
     func peerDiscovered(_ peer: MCPeerID) -> Bool {
+        print("peerDiscovered(_ peer: MCPeerID) -> Bool")
+        
         guard let multipeerSession = multipeerSession else { return false }
         
         if multipeerSession.connectedPeers.count > 3 {
@@ -187,6 +227,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     }
     /// - Tag: PeerJoined
     func peerJoined(_ peer: MCPeerID) {
+        print("peerDiscovered(_ peer: MCPeerID) -> Bool")
+        
         messageLabel.displayMessage("""
             A peer wants to join the experience.
             Hold the phones next to each other.
@@ -196,6 +238,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     }
         
     func peerLeft(_ peer: MCPeerID) {
+        print("peerLeft(_ peer: MCPeerID)")
+        
         messageLabel.displayMessage("A peer has left the shared experience.")
         
         // Remove all ARAnchors associated with the peer that just left the experience.
@@ -206,6 +250,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     }
     
     func session(_ session: ARSession, didFailWithError error: Error) {
+        print("session(_ session: ARSession, didFailWithError error: Error)")
+        
         guard error is ARError else { return }
         
         let errorWithInfo = error as NSError
@@ -231,6 +277,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     }
     
     @IBAction func resetTracking() {
+        print("resetTracking()")
+        
         guard let configuration = arView.session.configuration else { print("A configuration is required"); return }
         arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
     }
@@ -246,6 +294,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     }
     
     private func removeAllAnchorsOriginatingFromARSessionWithID(_ identifier: String) {
+        print("removeAllAnchorsOriginatingFromARSessionWithID(_ identifier: String)")
+        
         guard let frame = arView.session.currentFrame else { return }
         for anchor in frame.anchors {
             guard let anchorSessionID = anchor.sessionIdentifier else { continue }
@@ -256,6 +306,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     }
     
     private func sendARSessionIDTo(peers: [MCPeerID]) {
+        print("sendARSessionIDTo(peers: [MCPeerID])")
+        
         guard let multipeerSession = multipeerSession else { return }
         let idString = arView.session.identifier.uuidString
         let command = "SessionID:" + idString
@@ -268,17 +320,79 @@ class ViewController: UIViewController, ARSessionDelegate {
 // MARK: - ModelEntities
 extension ViewController {
     func addBoardEntity(in scene: RealityKit.Scene, arView: ARView) {
-        ModelEntity.loadModelAsync(named: "Board")
+        print("addBoardEntity(in scene: RealityKit.Scene, arView: ARView)")
+        
+        ModelEntity.loadModelAsync(named: AssetReference.board.rawValue)
             .sink(
                 receiveCompletion: { completion in },
                 receiveValue: { [weak self] entity in
                     guard let self = self else { return }
-                    entity.name = "Board"
+                    entity.name = AssetReference.board.rawValue
                     entity.generateCollisionShapes(recursive: true)
                     arView.installGestures(.all, for: entity)
                     self.boardEntity = entity
                 }
             )
             .store(in: &cancellables)
+    }
+    
+    func addXOEntity(in entity: ModelEntity, at position: XOPosition) {
+        print("addXOEntity(in entity: ModelEntity, at position: XOPosition)")
+        
+        let entityHasNoValue = boardEntity.children.first {
+            $0.name == position.rawValue
+        }?.children.allSatisfy { $0.name != AssetReference.x.rawValue && $0.name != AssetReference.o.rawValue } ?? false
+        
+        guard entityHasNoValue else { return }
+        isLoadingXOEntity = true
+        ModelEntity.loadModelAsync(named: (isXTurn ? AssetReference.x : AssetReference.o).rawValue)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    self?.isLoadingXOEntity = false
+                    
+                    switch completion {
+                    case .failure(let err): print(err.localizedDescription)
+                    default: return
+                    }
+                },
+                receiveValue: { [weak self] xoEntity in
+                    guard let self = self else { return }
+                    xoEntity.name = (self.isXTurn ? AssetReference.x : AssetReference.o).rawValue
+                    entity.addChild(xoEntity)
+                    
+                    self.boardValues[position] = XOModel(isX: self.isXTurn, entity: xoEntity)
+                    
+//                    self.checkGameStatus()
+                    self.isXTurn.toggle()
+                    self.isLoadingXOEntity = false
+                }
+            )
+            .store(in: &cancellables)
+    }
+    
+    func generateTapEntity(in position: XOPosition) {
+        print("generateTapEntity(in position: XOPosition)")
+        
+        let rectangle = MeshResource.generatePlane(width: Constants.oneThirdBoardSize, depth: Constants.oneThirdBoardSize, cornerRadius: 5)
+        let material = UnlitMaterial(color: .clear)
+        let tapEntity = ModelEntity(mesh: rectangle, materials: [material])
+        
+        tapEntity.generateCollisionShapes(recursive: true)
+        tapEntity.name = position.rawValue
+        tapEntity.position = position.toPositionVector()
+        
+        boardEntity.addChild(tapEntity)
+    }
+}
+
+// MARK: - Game Logic
+extension ViewController {
+    @IBAction func startGame() {
+        print("startGame()")
+        
+        startButton.isHidden = true
+//        withAnimation { isAdjustBoardPresented = false }
+        XOPosition.allCases.forEach(generateTapEntity)
+//        removeEditBoardGesturesAction?()
     }
 }
