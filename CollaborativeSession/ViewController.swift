@@ -98,26 +98,25 @@ class ViewController: UIViewController, ARSessionDelegate {
     @objc
     func handleTap(recognizer: UITapGestureRecognizer) {
         print("handleTap(recognizer: UITapGestureRecognizer)")
-        
+
         let location = recognizer.location(in: arView)
         
-        // Attempt to find a 3D location on a horizontal surface underneath the user's touch location.
         let results = arView.raycast(from: location, allowing: .estimatedPlane, alignment: .any)
         if let firstResult = results.first {
             if gameAnchor == nil {
-                // Add an ARAnchor at the touch location with a special name you check later in `session(_:didAdd:)`.
                 let anchor = ARAnchor(name: "Anchor for object placement", transform: firstResult.worldTransform)
                 arView.session.add(anchor: anchor)
                 
                 return
             }
-            
+
             guard isGameOver == false else { return }
             guard isLoadingXOEntity == false else { return }
             if let entity = arView.entity(at: location) as? ModelEntity, let position = XOPosition(rawValue: entity.name) {
                 addXOEntity(in: entity, at: position)
+                sendEntityPlacementData(position: position)
             }
-            
+
         } else {
             messageLabel.displayMessage("Can't place object - no surface found.\nLook for flat surfaces.", duration: 2.0)
             print("Warning: Object placement failed.")
@@ -155,21 +154,6 @@ class ViewController: UIViewController, ARSessionDelegate {
                     isTapScreenPresented = false
                     isAdjustBoardPresented = true
                 }
-                
-//                // Create a cube at the location of the anchor.
-//                let boxLength: Float = 0.05
-//                // Color the cube based on the user that placed it.
-//                let color = anchor.sessionIdentifier?.toRandomColor() ?? .white
-//                let coloredCube = ModelEntity(mesh: MeshResource.generateBox(size: boxLength),
-//                                              materials: [SimpleMaterial(color: color, isMetallic: true)])
-//                // Offset the cube by half its length to align its bottom with the real-world surface.
-//                coloredCube.position = [0, boxLength / 2, 0]
-//                
-//                // Attach the cube to the ARAnchor via an AnchorEntity.
-//                //   World origin -> ARAnchor -> AnchorEntity -> ModelEntity
-//                let anchorEntity = AnchorEntity(anchor: anchor)
-//                anchorEntity.addChild(coloredCube)
-//                arView.scene.addAnchor(anchorEntity)
             }
         }
     }
@@ -191,35 +175,49 @@ class ViewController: UIViewController, ARSessionDelegate {
     }
 
     func receivedData(_ data: Data, from peer: MCPeerID) {
-        print("receivedData(_ data: Data, from peer: MCPeerID))")
-        
+        print("receivedData(_ data: Data, from peer: MCPeerID)")
+
         if let collaborationData = try? NSKeyedUnarchiver.unarchivedObject(ofClass: ARSession.CollaborationData.self, from: data) {
             arView.session.update(with: collaborationData)
             return
         }
-        // ...
+        
+        guard let commandString = String(data: data, encoding: .utf8) else { return }
+
+        // Handle session ID updates
         let sessionIDCommandString = "SessionID:"
-        if let commandString = String(data: data, encoding: .utf8), commandString.starts(with: sessionIDCommandString) {
+        if commandString.starts(with: sessionIDCommandString) {
             let newSessionID = String(commandString[commandString.index(commandString.startIndex,
                                                                      offsetBy: sessionIDCommandString.count)...])
-            // If this peer was using a different session ID before, remove all its associated anchors.
-            // This will remove the old participant anchor and its geometry from the scene.
             if let oldSessionID = peerSessionIDs[peer] {
                 removeAllAnchorsOriginatingFromARSessionWithID(oldSessionID)
             }
             
             peerSessionIDs[peer] = newSessionID
         }
+        
+        // Handle entity placement data
+        let placedAtCommandString = "PlacedAt:"
+        if commandString.starts(with: placedAtCommandString) {
+            let placedAtPositionRawValue = String(commandString[commandString.index(commandString.startIndex, offsetBy: placedAtCommandString.count)...])
+            if let position = XOPosition(rawValue: placedAtPositionRawValue),
+               let entity = arView.scene.findEntity(named: position.rawValue) as? ModelEntity {
+                DispatchQueue.main.async {
+                    self.addXOEntity(in: entity, at: position)
+                }
+            }
+        }
     }
+
     
     func peerDiscovered(_ peer: MCPeerID) -> Bool {
         print("peerDiscovered(_ peer: MCPeerID) -> Bool")
         
         guard let multipeerSession = multipeerSession else { return false }
         
-        if multipeerSession.connectedPeers.count > 3 {
+        if multipeerSession.connectedPeers.count == 2 {
             // Do not accept more than four users in the experience.
-            messageLabel.displayMessage("A fifth peer wants to join the experience.\nThis app is limited to four users.", duration: 6.0)
+            messageLabel.displayMessage("A fifth peer wants to join the experience.\nThis app is limited to two users.", duration: 6.0)
             return false
         } else {
             return true
@@ -305,6 +303,11 @@ class ViewController: UIViewController, ARSessionDelegate {
         }
     }
     
+}
+
+// MARK: - Data Communication
+extension ViewController {
+    
     private func sendARSessionIDTo(peers: [MCPeerID]) {
         print("sendARSessionIDTo(peers: [MCPeerID])")
         
@@ -315,6 +318,17 @@ class ViewController: UIViewController, ARSessionDelegate {
             multipeerSession.sendToPeers(commandData, reliably: true, peers: peers)
         }
     }
+    
+    func sendEntityPlacementData(position: XOPosition) {
+        print("sendEntityPlacementData(position: XOPosition)")
+        
+        guard let multipeerSession = multipeerSession else { return }
+        let command = "PlacedAt:" + position.rawValue
+        if let commandData = command.data(using: .utf8) {
+            multipeerSession.sendToAllPeers(commandData, reliably: true)
+        }
+    }
+    
 }
 
 // MARK: - ModelEntities
@@ -329,7 +343,7 @@ extension ViewController {
                     guard let self = self else { return }
                     entity.name = AssetReference.board.rawValue
                     entity.generateCollisionShapes(recursive: true)
-                    arView.installGestures(.all, for: entity)
+//                    arView.installGestures(.all, for: entity)
                     self.boardEntity = entity
                 }
             )
@@ -338,13 +352,14 @@ extension ViewController {
     
     func addXOEntity(in entity: ModelEntity, at position: XOPosition) {
         print("addXOEntity(in entity: ModelEntity, at position: XOPosition)")
-        
+
         let entityHasNoValue = boardEntity.children.first {
             $0.name == position.rawValue
         }?.children.allSatisfy { $0.name != AssetReference.x.rawValue && $0.name != AssetReference.o.rawValue } ?? false
-        
+
         guard entityHasNoValue else { return }
         isLoadingXOEntity = true
+        
         ModelEntity.loadModelAsync(named: (isXTurn ? AssetReference.x : AssetReference.o).rawValue)
             .sink(
                 receiveCompletion: { [weak self] completion in
@@ -365,10 +380,12 @@ extension ViewController {
 //                    self.checkGameStatus()
                     self.isXTurn.toggle()
                     self.isLoadingXOEntity = false
+                    
                 }
             )
             .store(in: &cancellables)
     }
+
     
     func generateTapEntity(in position: XOPosition) {
         print("generateTapEntity(in position: XOPosition)")
