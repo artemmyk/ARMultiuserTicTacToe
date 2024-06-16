@@ -1,9 +1,9 @@
 /*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-Main view controller for the AR experience.
-*/
+ See LICENSE folder for this sample’s licensing information.
+ 
+ Abstract:
+ Main view controller for the AR experience.
+ */
 
 import UIKit
 import RealityKit
@@ -38,27 +38,25 @@ class ViewController: UIViewController {
     
     var boardEntity: ModelEntity!
     var gameAnchor: AnchorEntity?
-    var restartGameAction: (() -> Void)?
     var removeEditBoardGesturesAction: (() -> Void)?
-
-    var isGameStarted = false
+    
     @Published var isGameOver = false
     @Published var isTapScreenPresented = true
     @Published var isAdjustBoardPresented = false
     @Published var isLoadingXOEntity = false
-
+    
     override func viewDidAppear(_ animated: Bool) {
         
         super.viewDidAppear(animated)
-
+        
         arView.session.delegate = self
-
+        
         // Turn off ARView's automatically-configured session
         // to create and set up your own configuration.
         arView.automaticallyConfigureSession = false
         
         configuration = ARWorldTrackingConfiguration()
-
+        
         // Enable a collaborative session.
         configuration?.isCollaborationEnabled = true
         
@@ -67,7 +65,7 @@ class ViewController: UIViewController {
         
         // Enable people occlusion
         configuration?.frameSemantics.insert(.personSegmentationWithDepth)
-
+        
         // Begin the session.
         arView.session.run(configuration!)
         
@@ -87,7 +85,7 @@ class ViewController: UIViewController {
         
         // Prevent the screen from being dimmed to avoid interrupting the AR experience.
         UIApplication.shared.isIdleTimerDisabled = true
-
+        
         arView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap(recognizer:))))
         
         addBoardEntity(in: arView.scene, arView: arView)
@@ -98,7 +96,7 @@ class ViewController: UIViewController {
     @objc
     func handleTap(recognizer: UITapGestureRecognizer) {
         print("handleTap(recognizer: UITapGestureRecognizer)")
-
+        
         let location = recognizer.location(in: arView)
         
         let results = arView.raycast(from: location, allowing: .estimatedPlane, alignment: .any)
@@ -109,25 +107,18 @@ class ViewController: UIViewController {
                 
                 return
             }
-
+            
             guard isGameOver == false else { return }
             guard isLoadingXOEntity == false else { return }
             if let entity = arView.entity(at: location) as? ModelEntity, let position = XOPosition(rawValue: entity.name) {
                 addXOEntity(in: entity, at: position)
-                sendEntityPlacementData(position: position)
+                sendCommand(Command.placedAt, data: position.rawValue)
             }
-
+            
         } else {
             messageLabel.displayMessage("Can't place object - no surface found.\nLook for flat surfaces.", duration: 2.0)
             print("Warning: Object placement failed.")
         }
-    }
-    
-    @IBAction func resetTracking() {
-        print("resetTracking()")
-        
-        guard let configuration = arView.session.configuration else { print("A configuration is required"); return }
-        arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
     }
     
     override var prefersStatusBarHidden: Bool {
@@ -168,22 +159,12 @@ extension ViewController {
         }
     }
     
-    func sendEntityPlacementData(position: XOPosition) {
-        print("sendEntityPlacementData(position: XOPosition)")
-        sendCommand(Commands.placedAtCommandString.rawValue, data: position.rawValue)
-    }
-    
-    func sendGameStartCommand() {
-        print("func sendGameStartCommand()")
-        sendCommand(Commands.gameStartedCommandString.rawValue)
-    }
-    
-    func sendCommand(_ command: String, data: String? = nil) {
-        print("sendCommand(_ command: String, data: String)")
+    func sendCommand(_ command: Command, data: String? = nil) {
+        print("sendCommand(_ command: Command, data: String)")
         
         guard let multipeerSession = multipeerSession else { return }
         
-        let composedCommand = "\(command):\(data ?? "")"
+        let composedCommand = "\(command.rawValue):\(data ?? "")"
         if let commandData = composedCommand.data(using: .utf8) {
             multipeerSession.sendToAllPeers(commandData, reliably: true)
         }
@@ -214,8 +195,8 @@ extension ViewController: ARSessionDelegate {
             } else if anchor.name == "Anchor for object placement" {
                 let anchorEntity = AnchorEntity(anchor: anchor)
                 anchorEntity.setScale(SIMD3<Float>(0.002, 0.002, 0.002), relativeTo: anchorEntity)
-
-                anchorEntity.addChild(self.boardEntity)
+                
+                anchorEntity.addChild(boardEntity)
                 
                 arView.scene.addAnchor(anchorEntity)
                 gameAnchor = anchorEntity
@@ -224,6 +205,8 @@ extension ViewController: ARSessionDelegate {
                     isTapScreenPresented = false
                     isAdjustBoardPresented = true
                 }
+                
+                startButton.isHidden = false
             }
         }
     }
@@ -276,7 +259,7 @@ extension ViewController: ARSessionDelegate {
 extension ViewController: MultipeerSessionDelegate {
     func receivedData(_ data: Data, from peer: MCPeerID) {
         print("receivedData(_ data: Data, from peer: MCPeerID)")
-
+        
         if let collaborationData = try? NSKeyedUnarchiver.unarchivedObject(ofClass: ARSession.CollaborationData.self, from: data) {
             arView.session.update(with: collaborationData)
             return
@@ -285,11 +268,11 @@ extension ViewController: MultipeerSessionDelegate {
         // handle commands
         guard let commandString = String(data: data, encoding: .utf8) else { return }
         let commandComponents = commandString.components(separatedBy: Constants.commandDataSeparator)
-        guard let command = Commands(rawValue: commandComponents[0]) else { return }
+        guard let command = Command(rawValue: commandComponents[0]) else { return }
         let commandData = commandComponents[1]
         
         switch command {
-        case Commands.sessionIDCommandString:
+        case Command.sessionID:
             let newSessionID = commandData
             
             if let oldSessionID = peerSessionIDs[peer] {
@@ -298,12 +281,12 @@ extension ViewController: MultipeerSessionDelegate {
             
             peerSessionIDs[peer] = newSessionID
             
-        case Commands.gameStartedCommandString:
+        case Command.gameStarted:
             DispatchQueue.main.async {
                 self.startGame()
             }
             
-        case Commands.placedAtCommandString:
+        case Command.placedAt:
             let placedAtPositionRawValue = commandData
             
             if let position = XOPosition(rawValue: placedAtPositionRawValue),
@@ -312,9 +295,13 @@ extension ViewController: MultipeerSessionDelegate {
                     self.addXOEntity(in: entity, at: position)
                 }
             }
+        case Command.gameRestarted:
+            DispatchQueue.main.async {
+                self.restartGame()
+            }
         }
     }
-
+    
     
     func peerDiscovered(_ peer: MCPeerID) -> Bool {
         print("peerDiscovered(_ peer: MCPeerID) -> Bool")
@@ -340,7 +327,7 @@ extension ViewController: MultipeerSessionDelegate {
         // Provide your session ID to the new user so they can keep track of your anchors.
         sendARSessionIDTo(peers: [peer])
     }
-        
+    
     func peerLeft(_ peer: MCPeerID) {
         print("peerLeft(_ peer: MCPeerID)")
         
@@ -366,7 +353,7 @@ extension ViewController {
                     guard let self = self else { return }
                     entity.name = AssetReference.board.rawValue
                     entity.generateCollisionShapes(recursive: true)
-//                    arView.installGestures(.all, for: entity)
+                    //                    arView.installGestures(.all, for: entity)
                     self.boardEntity = entity
                 }
             )
@@ -375,11 +362,11 @@ extension ViewController {
     
     func addXOEntity(in entity: ModelEntity, at position: XOPosition) {
         print("addXOEntity(in entity: ModelEntity, at position: XOPosition)")
-
+        
         let entityHasNoValue = boardEntity.children.first {
             $0.name == position.rawValue
         }?.children.allSatisfy { $0.name != AssetReference.x.rawValue && $0.name != AssetReference.o.rawValue } ?? false
-
+        
         guard entityHasNoValue else { return }
         isLoadingXOEntity = true
         
@@ -400,7 +387,7 @@ extension ViewController {
                     
                     self.boardValues[position] = XOModel(isX: self.isXTurn, entity: xoEntity)
                     
-//                    self.checkGameStatus()
+                    self.checkGameStatus()
                     self.isXTurn.toggle()
                     self.isLoadingXOEntity = false
                     
@@ -408,7 +395,7 @@ extension ViewController {
             )
             .store(in: &cancellables)
     }
-
+    
     
     func generateTapEntity(in position: XOPosition) {
         print("generateTapEntity(in position: XOPosition)")
@@ -425,19 +412,109 @@ extension ViewController {
     }
 }
 
+// MARK: - Game State
+extension ViewController {
+    @IBAction func startGameHandler() {
+        print("startGameHandler()")
+        
+        startGame()
+        sendCommand(Command.gameStarted)
+    }
+    
+    func startGame() {
+        print("startGame()")
+                
+        startButton.isHidden = true
+        withAnimation { isAdjustBoardPresented = false }
+        XOPosition.allCases.forEach(generateTapEntity)
+        //        removeEditBoardGesturesAction?()
+    }
+    
+    @IBAction func restartGameHandler() {
+        print("restartGameHandler()")
+        
+        restartGame()
+        sendCommand(Command.gameRestarted)
+    }
+    
+    func restartGame() {
+        print("restartGame()")
+        
+        isXTurn = true
+        boardValues.removeAll()
+        withAnimation {
+            isGameOver = false
+            isAdjustBoardPresented = false
+            isTapScreenPresented = true
+        }
+        
+        guard let gameAnchor = gameAnchor else { return }
+        arView.scene.removeAnchor(gameAnchor)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            guard let self = self else { return }
+            addBoardEntity(in: arView.scene, arView: arView)
+            self.gameAnchor = nil
+        }
+    }
+    
+    func resetTracking() {
+        print("resetTracking()")
+        
+        guard let configuration = arView.session.configuration else { print("A configuration is required"); return }
+        arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+    }
+    
+    private func endGame() {
+        withAnimation { isGameOver = true }
+    }
+}
+
+// MARK: - Animation
+extension ViewController {
+    private func animateEntities(positions: [XOPosition]) {
+        for position in positions {
+            guard let xoEntity = boardValues[position]?.entity else { continue }
+            var translation = xoEntity.transform
+            translation.translation = SIMD3(SCNVector3(0, self.isXTurn ? 14 : 18, 0))
+            xoEntity.move(to: translation, relativeTo: xoEntity.parent, duration: 0.3, timingFunction: .easeInOut)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                var rotation = xoEntity.transform
+                rotation.rotation = simd_quatf(angle: .pi/2, axis: [1,0,0])
+                xoEntity.move(to: rotation, relativeTo: xoEntity.parent, duration: 0.3, timingFunction: .easeInOut)
+            }
+        }
+        
+        endGame()
+    }
+}
+
 // MARK: - Game Logic
 extension ViewController {
-    @IBAction func startGame() {
-        print("startGame()")
+    private func checkGameStatus() {
+        let winningCombinations: [[XOPosition]] = [
+            [.topLeft, .topCenter, .topRight],
+            [.centerLeft, .centerCenter, .centerRight],
+            [.bottomLeft, .bottomCenter, .bottomRight],
+            [.topLeft, .centerLeft, .bottomLeft],
+            [.topCenter, .centerCenter, .bottomCenter],
+            [.topRight, .centerRight, .bottomRight],
+            [.topLeft, .centerCenter, .bottomRight],
+            [.topRight, .centerCenter, .bottomLeft]
+        ]
         
-        if isGameStarted { return }
+        for combination in winningCombinations {
+            let values = combination.map { boardValues[$0]?.isX }
+            if values.allSatisfy({ $0 == true }) || values.allSatisfy({ $0 == false }) {
+                animateEntities(positions: combination)
+                return
+            }
+        }
         
-        isGameStarted = true
-        startButton.isHidden = true
-//        withAnimation { isAdjustBoardPresented = false }
-        XOPosition.allCases.forEach(generateTapEntity)
-//        removeEditBoardGesturesAction?()
-        
-        sendGameStartCommand()
+        if boardValues.count == 9 {
+            endGame()
+            return
+        }
     }
 }

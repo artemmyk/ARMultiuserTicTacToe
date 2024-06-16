@@ -37,10 +37,10 @@
                                 <state key="selected" image="restartPressed"/>
                                 <state key="highlighted" image="restartPressed"/>
                                 <connections>
-                                    <action selector="resetTracking" destination="BYZ-38-t0r" eventType="touchUpInside" id="YId-D5-jQC"/>
+                                    <action selector="restartGameHandler" destination="BYZ-38-t0r" eventType="touchUpInside" id="5OQ-qa-NbB"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="bottom" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gwg-iX-fNL" userLabel="Restart Experience Button Icon">
+                            <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="bottom" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gwg-iX-fNL" userLabel="Restart Experience Button Icon">
                                 <rect key="frame" x="365" y="172" width="44" height="59"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="44" id="3uP-RD-7an"/>
@@ -53,7 +53,7 @@
                                 <state key="selected" image="restartPressed"/>
                                 <state key="highlighted" image="restartPressed"/>
                                 <connections>
-                                    <action selector="startGame" destination="BYZ-38-t0r" eventType="touchUpInside" id="VIF-Pe-I6n"/>
+                                    <action selector="startGameHandler" destination="BYZ-38-t0r" eventType="touchUpInside" id="VIF-Pe-I6n"/>
                                 </connections>
                             </button>
                         </subviews>

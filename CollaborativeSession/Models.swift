@@ -68,10 +68,11 @@ enum AssetReference: String {
     case board = "Board", x = "XMarker", o = "OMarker"
 }
 
-enum Commands: String {
-    case sessionIDCommandString = "SessionID",
-         placedAtCommandString = "PlacedAt",
-         gameStartedCommandString = "GameStarted"
+enum Command: String {
+    case sessionID = "SessionID",
+         placedAt = "PlacedAt",
+         gameStarted = "GameStarted",
+         gameRestarted = "GameRestarted"
 }
 
 struct Constants {
