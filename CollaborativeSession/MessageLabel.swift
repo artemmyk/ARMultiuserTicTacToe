@@ -17,7 +17,7 @@ class MessageLabel: UILabel {
 		super.drawText(in: rect.inset(by: insets))
 	}
     
-    func displayMessage(_ text: String, duration: TimeInterval = 3.0) {
+    func displayMessage(_ text: String) {
         guard !ignoreMessages else { return }
         guard !text.isEmpty else {
             DispatchQueue.main.async {
@@ -30,17 +30,6 @@ class MessageLabel: UILabel {
         DispatchQueue.main.async {
             self.isHidden = false
             self.text = text
-            
-            // Use a tag to tell if the label has been updated.
-            let tag = self.tag + 1
-            self.tag = tag
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
-                // Do not hide if this method is called again before this block kicks in.
-                if self.tag == tag {
-                    self.isHidden = true
-                }
-            }
         }
     }
 }

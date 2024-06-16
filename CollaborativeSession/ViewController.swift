@@ -91,7 +91,7 @@ class ViewController: UIViewController {
         
         addBoardEntity(in: arView.scene, arView: arView)
         
-        messageLabel.displayMessage("Tap the screen to place the grid.\nInvite others to launch this app to join you.", duration: 60.0)
+        messageLabel.displayMessage("Invite others to launch this app to join you.")
     }
     
     @objc
@@ -103,6 +103,8 @@ class ViewController: UIViewController {
         let results = arView.raycast(from: location, allowing: .estimatedPlane, alignment: .any)
         if let firstResult = results.first {
             if gameAnchor == nil {
+                guard !(self.multipeerSession?.connectedPeers.isEmpty ?? true) else { return }
+                
                 let anchor = ARAnchor(name: "Anchor for object placement", transform: firstResult.worldTransform)
                 arView.session.add(anchor: anchor)
                 
@@ -119,7 +121,7 @@ class ViewController: UIViewController {
             }
             
         } else {
-            messageLabel.displayMessage("Can't place object - no surface found.\nLook for flat surfaces.", duration: 2.0)
+            messageLabel.displayMessage("Can't place object - no surface found.\nLook for flat surfaces.")
             print("Warning: Object placement failed.")
         }
     }
@@ -182,8 +184,6 @@ extension ViewController: ARSessionDelegate {
         
         for anchor in anchors {
             if let participantAnchor = anchor as? ARParticipantAnchor {
-                messageLabel.displayMessage("Established joint experience with a peer.")
-                // ...
                 let anchorEntity = AnchorEntity(anchor: participantAnchor)
                 
                 let coordinateSystem = MeshResource.generateCoordinateSystemAxes()
@@ -195,6 +195,8 @@ extension ViewController: ARSessionDelegate {
                 anchorEntity.addChild(coloredSphere)
                 
                 arView.scene.addAnchor(anchorEntity)
+                
+                messageLabel.displayMessage("An opponent has joined. Tap the screen to place the grid.")
             } else if anchor.name == "Anchor for object placement" {
                 let anchorEntity = AnchorEntity(anchor: anchor)
                 anchorEntity.setScale(SIMD3<Float>(0.002, 0.002, 0.002), relativeTo: anchorEntity)
@@ -210,6 +212,7 @@ extension ViewController: ARSessionDelegate {
                 }
                 
                 startButton.isHidden = false
+                messageLabel.displayMessage("Press the start button to start the game.")
             }
         }
     }
@@ -313,7 +316,7 @@ extension ViewController: MultipeerSessionDelegate {
         
         if multipeerSession.connectedPeers.count == 2 {
             // Do not accept more than four users in the experience.
-            messageLabel.displayMessage("A fifth peer wants to join the experience.\nThis app is limited to two users.", duration: 6.0)
+            messageLabel.displayMessage("A third peer wants to join the experience.\nThis app is limited to two users.")
             return false
         } else {
             return true
@@ -326,7 +329,7 @@ extension ViewController: MultipeerSessionDelegate {
         messageLabel.displayMessage("""
             A peer wants to join the experience.
             Hold the phones next to each other.
-            """, duration: 6.0)
+            """)
         // Provide your session ID to the new user so they can keep track of your anchors.
         sendARSessionIDTo(peers: [peer])
     }
@@ -391,10 +394,11 @@ extension ViewController {
                     
                     self.boardValues[position] = XOModel(isX: isX, entity: xoEntity)
                     
-                    self.checkGameStatus()
                     self.isPlayersTurn.toggle()
-                    self.isLoadingXOEntity = false
+                    messageLabel.displayMessage("It's your\(self.isPlayersTurn ? "" : " opponent's") turn.")
                     
+                    self.checkGameStatus()
+                    self.isLoadingXOEntity = false
                 }
             )
             .store(in: &cancellables)
@@ -422,9 +426,11 @@ extension ViewController {
         print("startGameHandler()")
         
         startGame()
+        
         playersModel = AssetReference.x.rawValue
         isPlayersTurn = true
         sendCommand(Command.gameStarted)
+        messageLabel.displayMessage("It's your turn.")
     }
     
     func startGame() {
@@ -436,6 +442,7 @@ extension ViewController {
         withAnimation { isAdjustBoardPresented = false }
         XOPosition.allCases.forEach(generateTapEntity)
         //        removeEditBoardGesturesAction?()
+        messageLabel.displayMessage("It's your opponent's turn.")
     }
     
     @IBAction func restartGameHandler() {
@@ -443,6 +450,7 @@ extension ViewController {
         
         restartGame()
         sendCommand(Command.gameRestarted)
+        messageLabel.displayMessage("It's your turn.")
     }
     
     func restartGame() {
@@ -465,6 +473,8 @@ extension ViewController {
             addBoardEntity(in: arView.scene, arView: arView)
             self.gameAnchor = nil
         }
+        
+        messageLabel.displayMessage("It's your opponent's turn.")
     }
     
     func resetTracking() {
@@ -475,7 +485,10 @@ extension ViewController {
     }
     
     private func endGame() {
-        withAnimation { isGameOver = true }
+        withAnimation {
+            isGameOver = true
+            messageLabel.displayMessage("It's a tie. You can restart the game by clicking the restart button.")
+        }
     }
 }
 
@@ -498,6 +511,7 @@ extension ViewController {
         }
         
         endGame()
+        messageLabel.displayMessage("You \(!self.isPlayersTurn ? "won" : "lost"). You can restart the game by clicking the restart button.")
     }
 }
 
