@@ -31,7 +31,6 @@ class ViewController: UIViewController {
     
     var configuration: ARWorldTrackingConfiguration?
     
-    //
     private var isPlayersTurn = false
     private var playersModel: String?
     private var boardValues = [XOPosition: XOModel]()
@@ -39,12 +38,9 @@ class ViewController: UIViewController {
     
     var boardEntity: ModelEntity!
     var gameAnchor: AnchorEntity?
-    var removeEditBoardGesturesAction: (() -> Void)?
     
-    @Published var isGameOver = false
-    @Published var isTapScreenPresented = true
-    @Published var isAdjustBoardPresented = false
-    @Published var isLoadingXOEntity = false
+    var isGameOver = false
+    var isLoadingXOEntity = false
     
     override func viewDidAppear(_ animated: Bool) {
         
@@ -111,8 +107,9 @@ class ViewController: UIViewController {
                 return
             }
             
-            guard isGameOver == false else { return }
-            guard isLoadingXOEntity == false else { return }
+            guard !isGameOver else { return }
+            guard !isLoadingXOEntity else { return }
+            
             if isPlayersTurn,
                let entity = arView.entity(at: location) as? ModelEntity,
                let position = XOPosition(rawValue: entity.name) {
@@ -206,13 +203,9 @@ extension ViewController: ARSessionDelegate {
                 arView.scene.addAnchor(anchorEntity)
                 gameAnchor = anchorEntity
                 
-                withAnimation {
-                    isTapScreenPresented = false
-                    isAdjustBoardPresented = true
-                }
-                
-                startButton.isHidden = false
-                messageLabel.displayMessage("Press the start button to start the game.")
+//                startButton.isHidden = false
+//                messageLabel.displayMessage("Press the start button to start the game.")
+                startGameHandler()
             }
         }
     }
@@ -331,7 +324,7 @@ extension ViewController: MultipeerSessionDelegate {
             Hold the phones next to each other.
             """)
         // Provide your session ID to the new user so they can keep track of your anchors.
-        sendARSessionIDTo(peers: [peer])
+        sendCommand(Command.sessionID, data: arView.session.identifier.uuidString)
     }
     
     func peerLeft(_ peer: MCPeerID) {
@@ -357,9 +350,11 @@ extension ViewController {
                 receiveCompletion: { completion in },
                 receiveValue: { [weak self] entity in
                     guard let self = self else { return }
+                    
                     entity.name = AssetReference.board.rawValue
                     entity.generateCollisionShapes(recursive: true)
                     //                    arView.installGestures(.all, for: entity)
+                    
                     self.boardEntity = entity
                 }
             )
@@ -439,9 +434,8 @@ extension ViewController {
         playersModel = AssetReference.o.rawValue
         isPlayersTurn = false
         startButton.isHidden = true
-        withAnimation { isAdjustBoardPresented = false }
+
         XOPosition.allCases.forEach(generateTapEntity)
-        //        removeEditBoardGesturesAction?()
         messageLabel.displayMessage("It's your opponent's turn.")
     }
     
@@ -459,11 +453,7 @@ extension ViewController {
         playersModel = AssetReference.o.rawValue
         isPlayersTurn = false
         boardValues.removeAll()
-        withAnimation {
-            isGameOver = false
-            isAdjustBoardPresented = false
-            isTapScreenPresented = true
-        }
+        isGameOver = false
         
         guard let gameAnchor = gameAnchor else { return }
         arView.scene.removeAnchor(gameAnchor)
@@ -494,7 +484,7 @@ extension ViewController {
 
 // MARK: - Animation
 extension ViewController {
-    private func animateEntities(positions: [XOPosition]) {
+    private func winGame(positions: [XOPosition]) {
         for position in positions {
             guard let xoEntity = boardValues[position]?.entity else { continue }
             let isEntityX = xoEntity.name == AssetReference.x.rawValue
@@ -532,7 +522,7 @@ extension ViewController {
         for combination in winningCombinations {
             let values = combination.map { boardValues[$0]?.isX }
             if values.allSatisfy({ $0 == true }) || values.allSatisfy({ $0 == false }) {
-                animateEntities(positions: combination)
+                winGame(positions: combination)
                 return
             }
         }
