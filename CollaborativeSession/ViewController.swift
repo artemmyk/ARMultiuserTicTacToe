@@ -41,6 +41,7 @@ class ViewController: UIViewController {
     var restartGameAction: (() -> Void)?
     var removeEditBoardGesturesAction: (() -> Void)?
 
+    var isGameStarted = false
     @Published var isGameOver = false
     @Published var isTapScreenPresented = true
     @Published var isAdjustBoardPresented = false
@@ -169,10 +170,21 @@ extension ViewController {
     
     func sendEntityPlacementData(position: XOPosition) {
         print("sendEntityPlacementData(position: XOPosition)")
+        sendCommand(Commands.placedAtCommandString.rawValue, data: position.rawValue)
+    }
+    
+    func sendGameStartCommand() {
+        print("func sendGameStartCommand()")
+        sendCommand(Commands.gameStartedCommandString.rawValue)
+    }
+    
+    func sendCommand(_ command: String, data: String? = nil) {
+        print("sendCommand(_ command: String, data: String)")
         
         guard let multipeerSession = multipeerSession else { return }
-        let command = "PlacedAt:" + position.rawValue
-        if let commandData = command.data(using: .utf8) {
+        
+        let composedCommand = "\(command):\(data ?? "")"
+        if let commandData = composedCommand.data(using: .utf8) {
             multipeerSession.sendToAllPeers(commandData, reliably: true)
         }
     }
@@ -270,24 +282,30 @@ extension ViewController: MultipeerSessionDelegate {
             return
         }
         
+        // handle commands
         guard let commandString = String(data: data, encoding: .utf8) else { return }
-
-        // Handle session ID updates
-        let sessionIDCommandString = "SessionID:"
-        if commandString.starts(with: sessionIDCommandString) {
-            let newSessionID = String(commandString[commandString.index(commandString.startIndex,
-                                                                     offsetBy: sessionIDCommandString.count)...])
+        let commandComponents = commandString.components(separatedBy: Constants.commandDataSeparator)
+        guard let command = Commands(rawValue: commandComponents[0]) else { return }
+        let commandData = commandComponents[1]
+        
+        switch command {
+        case Commands.sessionIDCommandString:
+            let newSessionID = commandData
+            
             if let oldSessionID = peerSessionIDs[peer] {
                 removeAllAnchorsOriginatingFromARSessionWithID(oldSessionID)
             }
             
             peerSessionIDs[peer] = newSessionID
-        }
-        
-        // Handle entity placement data
-        let placedAtCommandString = "PlacedAt:"
-        if commandString.starts(with: placedAtCommandString) {
-            let placedAtPositionRawValue = String(commandString[commandString.index(commandString.startIndex, offsetBy: placedAtCommandString.count)...])
+            
+        case Commands.gameStartedCommandString:
+            DispatchQueue.main.async {
+                self.startGame()
+            }
+            
+        case Commands.placedAtCommandString:
+            let placedAtPositionRawValue = commandData
+            
             if let position = XOPosition(rawValue: placedAtPositionRawValue),
                let entity = arView.scene.findEntity(named: position.rawValue) as? ModelEntity {
                 DispatchQueue.main.async {
@@ -412,9 +430,14 @@ extension ViewController {
     @IBAction func startGame() {
         print("startGame()")
         
+        if isGameStarted { return }
+        
+        isGameStarted = true
         startButton.isHidden = true
 //        withAnimation { isAdjustBoardPresented = false }
         XOPosition.allCases.forEach(generateTapEntity)
 //        removeEditBoardGesturesAction?()
+        
+        sendGameStartCommand()
     }
 }

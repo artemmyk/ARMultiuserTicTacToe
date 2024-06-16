@@ -68,6 +68,14 @@ enum AssetReference: String {
     case board = "Board", x = "XMarker", o = "OMarker"
 }
 
+enum Commands: String {
+    case sessionIDCommandString = "SessionID",
+         placedAtCommandString = "PlacedAt",
+         gameStartedCommandString = "GameStarted"
+}
+
 struct Constants {
     static let oneThirdBoardSize: Float = 45.66
+    
+    static let commandDataSeparator  = ":"
 }
