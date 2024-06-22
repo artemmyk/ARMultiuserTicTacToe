@@ -23,13 +23,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0C34B3C923077FC2005DB76E /* CollaborativeSession.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CollaborativeSession.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0C34B3C923077FC2005DB76E /* ARMultiuserTicTacToe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ARMultiuserTicTacToe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C34B3CC23077FC2005DB76E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0C34B3CE23077FC2005DB76E /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		0C34B3D323077FC2005DB76E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		0C34B3D523077FC5005DB76E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0C34B3D823077FC5005DB76E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		0C34B3DA23077FC5005DB76E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0C34B3DA23077FC5005DB76E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ARMultiuserTicTacToe/Info.plist; sourceTree = SOURCE_ROOT; };
 		0C968A50230CB2EA00B415B3 /* MultipeerSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MultipeerSession.swift; sourceTree = "<group>"; };
 		0C968A52230DD14F00B415B3 /* Utilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		0CCDFA75230F13570095AFDB /* MessageLabel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageLabel.swift; sourceTree = "<group>"; };
@@ -56,7 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				1EC2B0282C1F2EEB0091532F /* Readme.md */,
-				0C34B3CB23077FC2005DB76E /* CollaborativeSession */,
+				0C34B3CB23077FC2005DB76E /* ARMultiuserTicTacToe */,
 				0C34B3CA23077FC2005DB76E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -64,12 +64,12 @@
 		0C34B3CA23077FC2005DB76E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0C34B3C923077FC2005DB76E /* CollaborativeSession.app */,
+				0C34B3C923077FC2005DB76E /* ARMultiuserTicTacToe.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		0C34B3CB23077FC2005DB76E /* CollaborativeSession */ = {
+		0C34B3CB23077FC2005DB76E /* ARMultiuserTicTacToe */ = {
 			isa = PBXGroup;
 			children = (
 				1EC3881D2C1E5ED50094EB58 /* OMarker.usdz */,
@@ -87,15 +87,15 @@
 				0C34B3DA23077FC5005DB76E /* Info.plist */,
 				1EC388192C1E385E0094EB58 /* Models.swift */,
 			);
-			path = CollaborativeSession;
+			path = ARMultiuserTicTacToe;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		0C34B3C823077FC2005DB76E /* CollaborativeSession */ = {
+		0C34B3C823077FC2005DB76E /* ARMultiuserTicTacToe */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0C34B3DD23077FC5005DB76E /* Build configuration list for PBXNativeTarget "CollaborativeSession" */;
+			buildConfigurationList = 0C34B3DD23077FC5005DB76E /* Build configuration list for PBXNativeTarget "ARMultiuserTicTacToe" */;
 			buildPhases = (
 				0C34B3C523077FC2005DB76E /* Sources */,
 				0C34B3C623077FC2005DB76E /* Frameworks */,
@@ -105,9 +105,9 @@
 			);
 			dependencies = (
 			);
-			name = CollaborativeSession;
+			name = ARMultiuserTicTacToe;
 			productName = CollaborativeSession;
-			productReference = 0C34B3C923077FC2005DB76E /* CollaborativeSession.app */;
+			productReference = 0C34B3C923077FC2005DB76E /* ARMultiuserTicTacToe.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -125,7 +125,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 0C34B3C423077FC2005DB76E /* Build configuration list for PBXProject "CollaborativeSession" */;
+			buildConfigurationList = 0C34B3C423077FC2005DB76E /* Build configuration list for PBXProject "ARMultiuserTicTacToe" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -138,7 +138,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				0C34B3C823077FC2005DB76E /* CollaborativeSession */,
+				0C34B3C823077FC2005DB76E /* ARMultiuserTicTacToe */,
 			);
 		};
 /* End PBXProject section */
@@ -316,7 +316,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 9M66W82D7X;
-				INFOPLIST_FILE = CollaborativeSession/Info.plist;
+				INFOPLIST_FILE = ARMultiuserTicTacToe/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -336,7 +336,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 9M66W82D7X;
-				INFOPLIST_FILE = CollaborativeSession/Info.plist;
+				INFOPLIST_FILE = ARMultiuserTicTacToe/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -353,7 +353,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0C34B3C423077FC2005DB76E /* Build configuration list for PBXProject "CollaborativeSession" */ = {
+		0C34B3C423077FC2005DB76E /* Build configuration list for PBXProject "ARMultiuserTicTacToe" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0C34B3DB23077FC5005DB76E /* Debug */,
@@ -362,7 +362,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0C34B3DD23077FC5005DB76E /* Build configuration list for PBXNativeTarget "CollaborativeSession" */ = {
+		0C34B3DD23077FC5005DB76E /* Build configuration list for PBXNativeTarget "ARMultiuserTicTacToe" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0C34B3DE23077FC5005DB76E /* Debug */,
