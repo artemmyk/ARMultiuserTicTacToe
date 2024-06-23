@@ -10,10 +10,10 @@ import Foundation
 import CoreML
 
 class TicTacToeMLBot {
-    private let botMark = NSNumber(integerLiteral: 1)
-    private let humanMark = NSNumber(integerLiteral: 0)
-    private let emptyMark = NSNumber(integerLiteral: 2)
-    private let boardSize = 9
+    private static let botMark = NSNumber(integerLiteral: 1)
+    private static let humanMark = NSNumber(integerLiteral: 0)
+    private static let emptyMark = NSNumber(integerLiteral: 2)
+    private static let boardSize = 9
     
     private var boardState: MLMultiArray
     
@@ -26,6 +26,14 @@ class TicTacToeMLBot {
             fatalError("Could not initialize the model")
         }
         
+        self.boardState = TicTacToeMLBot.emptyMLArray()
+    }
+    
+    func clearState() {
+        self.boardState = TicTacToeMLBot.emptyMLArray()
+    }
+    
+    private static func emptyMLArray() -> MLMultiArray {
         guard let mlArray = try? MLMultiArray(shape: [1, boardSize as NSNumber], dataType: .float32) else {
             fatalError("Could not create ml array")
         }
@@ -34,23 +42,23 @@ class TicTacToeMLBot {
             mlArray[i] = emptyMark
         }
         
-        self.boardState = mlArray
+        return mlArray
     }
     
     func move(at position: XOPosition, isBotMove: Bool = true) {
-        let mark = isBotMove ? botMark : humanMark
+        let mark = isBotMove ? TicTacToeMLBot.botMark : TicTacToeMLBot.humanMark
         boardState[position.rawValue] = mark
     }
     
-    func bestMove() -> XOPosition? {
-        var bestValue = NSNumber(floatLiteral: 0)
+    func bestMove() -> XOPosition? {        
+        var bestValue = NSNumber(floatLiteral: -Double.infinity)
         var bestMove: XOPosition? = nil
         
         for position in XOPosition.allCases {
-            guard boardState[position.rawValue] == emptyMark else { continue }
+            guard boardState[position.rawValue] == TicTacToeMLBot.emptyMark else { continue }
             
             guard let newState = copyMLArray(boardState) else { fatalError("failed to copy an MLMultiArray") }
-            newState[position.rawValue] = botMark
+            newState[position.rawValue] = TicTacToeMLBot.botMark
             
             guard let prediction = try? model.prediction(dense_1_input: newState) else {
                 fatalError("prediction failed")
@@ -70,7 +78,7 @@ class TicTacToeMLBot {
     private func copyMLArray(_ mlArray: MLMultiArray) -> MLMultiArray? {
         let copy = try? MLMultiArray(shape: mlArray.shape, dataType: mlArray.dataType)
         
-        for i in 0..<boardSize {
+        for i in 0..<TicTacToeMLBot.boardSize {
             copy?[i] = mlArray[i]
         }
         
