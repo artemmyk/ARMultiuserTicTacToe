@@ -19,7 +19,9 @@ class ViewController: UIViewController {
     @IBOutlet weak var restartButton: UIButton!
     @IBOutlet weak var startButton: UIButton!
     
+    var isSingleGame = false
     var multipeerSession: MultipeerSession?
+    var ticTacToeMLBot: TicTacToeMLBot?
     
     let coachingOverlay = ARCoachingOverlayView()
     
@@ -42,47 +44,35 @@ class ViewController: UIViewController {
     var isGameOver = false
     var isLoadingXOEntity = false
     
+    
     override func viewDidAppear(_ animated: Bool) {
-        
         super.viewDidAppear(animated)
         
         arView.session.delegate = self
-        
-        // Turn off ARView's automatically-configured session
-        // to create and set up your own configuration.
         arView.automaticallyConfigureSession = false
         
         configuration = ARWorldTrackingConfiguration()
-        
-        // Enable a collaborative session.
-        configuration?.isCollaborationEnabled = true
-        
-        // Enable realistic reflections.
+        configuration?.isCollaborationEnabled = !isSingleGame
         configuration?.environmentTexturing = .automatic
-        
-        // Enable people occlusion
         configuration?.frameSemantics.insert(.personSegmentationWithDepth)
         
-        // Begin the session.
         arView.session.run(configuration!)
         
-        // Use key-value observation to monitor your ARSession's identifier.
         sessionIDObservation = observe(\.arView.session.identifier, options: [.new]) { object, change in
             print("SessionID changed to: \(change.newValue!)")
-            // Tell all other peers about your ARSession's changed ID, so
-            // that they can keep track of which ARAnchors are yours.
             guard let multipeerSession = self.multipeerSession else { return }
             self.sendARSessionIDTo(peers: multipeerSession.connectedPeers)
         }
         
         setupCoachingOverlay()
         
-        // Start looking for other players via MultiPeerConnectivity.
-        multipeerSession = MultipeerSession(delegate: self)
+        if isSingleGame {
+            ticTacToeMLBot = TicTacToeMLBot()
+        } else {
+            multipeerSession = MultipeerSession(delegate: self)
+        }
         
-        // Prevent the screen from being dimmed to avoid interrupting the AR experience.
         UIApplication.shared.isIdleTimerDisabled = true
-        
         arView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap(recognizer:))))
         
         addBoardEntity(in: arView.scene, arView: arView)
@@ -99,8 +89,6 @@ class ViewController: UIViewController {
         let results = arView.raycast(from: location, allowing: .estimatedPlane, alignment: .any)
         if let firstResult = results.first {
             if gameAnchor == nil {
-                guard !(self.multipeerSession?.connectedPeers.isEmpty ?? true) else { return }
-                
                 let anchor = ARAnchor(name: "Anchor for object placement", transform: firstResult.worldTransform)
                 arView.session.add(anchor: anchor)
                 
@@ -115,6 +103,8 @@ class ViewController: UIViewController {
             if isPlayersTurn,
                let entity = arView.entity(at: location) as? ModelEntity,
                let position = XOPosition(rawValue: Int(entity.name)!) {
+                guard self.boardValues[position] == nil else { return }
+                
                 addXOEntity(in: entity, at: position, isX: playersModel == AssetReference.x.rawValue)
                 sendCommand(Command.placedAt, data: String(position.rawValue))
             }
@@ -166,11 +156,45 @@ extension ViewController {
     func sendCommand(_ command: Command, data: String? = nil) {
         print("sendCommand(_ command: Command, data: String)")
         
+        if isSingleGame {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.receiveCommand(command, commandData: data)
+            }
+            
+            return
+        }
+        
         guard let multipeerSession = multipeerSession else { return }
         
         let composedCommand = "\(command.rawValue):\(data ?? "")"
         if let commandData = composedCommand.data(using: .utf8) {
             multipeerSession.sendToAllPeers(commandData, reliably: true)
+        }
+    }
+    
+    func receiveCommand(_ command: Command, commandData: String? = nil) {
+        switch command {
+        case Command.gameStarted:
+            ticTacToeMLBot?.clearState()
+        case Command.placedAt:
+            guard !isGameOver else { return }
+            
+            let placedAtPositionRawValue = Int(commandData!)!
+            let placedAt = XOPosition(rawValue: placedAtPositionRawValue)!
+            ticTacToeMLBot?.move(at: placedAt, isBotMove: false)
+            let botMovePosition = ticTacToeMLBot?.bestMove()
+                        
+            if let position = botMovePosition,
+               let entity = arView.scene.findEntity(named: String(position.rawValue)) as? ModelEntity {
+                DispatchQueue.main.async {
+                    self.addXOEntity(in: entity, at: position, isX: self.playersModel != AssetReference.x.rawValue)
+                }
+                ticTacToeMLBot?.move(at: position, isBotMove: true)
+            }
+        case Command.gameRestarted:
+            ticTacToeMLBot?.clearState()
+        default:
+            break
         }
     }
     
@@ -214,9 +238,10 @@ extension ViewController: ARSessionDelegate {
     
     /// - Tag: DidOutputCollaborationData
     func session(_ session: ARSession, didOutputCollaborationData data: ARSession.CollaborationData) {
+        guard let multipeerSession = multipeerSession else { return }
+        
         print("session(_ session: ARSession, didOutputCollaborationData data: ARSession.CollaborationData)")
         
-        guard let multipeerSession = multipeerSession else { return }
         if !multipeerSession.connectedPeers.isEmpty {
             guard let encodedData = try? NSKeyedArchiver.archivedData(withRootObject: data, requiringSecureCoding: true)
             else { fatalError("Unexpectedly failed to encode collaboration data.") }
