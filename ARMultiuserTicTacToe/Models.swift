@@ -15,8 +15,8 @@ struct XOModel {
     var entity: ModelEntity
 }
 
-enum XOPosition: String, CaseIterable {
-    case topLeft, topCenter, topRight,
+enum XOPosition: Int, CaseIterable {
+    case topLeft = 0, topCenter, topRight,
          centerLeft, centerCenter, centerRight,
          bottomLeft, bottomCenter, bottomRight
     

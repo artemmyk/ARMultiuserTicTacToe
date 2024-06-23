@@ -114,9 +114,9 @@ class ViewController: UIViewController {
             
             if isPlayersTurn,
                let entity = arView.entity(at: location) as? ModelEntity,
-               let position = XOPosition(rawValue: entity.name) {
+               let position = XOPosition(rawValue: Int(entity.name)!) {
                 addXOEntity(in: entity, at: position, isX: playersModel == AssetReference.x.rawValue)
-                sendCommand(Command.placedAt, data: position.rawValue)
+                sendCommand(Command.placedAt, data: String(position.rawValue))
             }
             
         } else {
@@ -290,8 +290,8 @@ extension ViewController: MultipeerSessionDelegate {
         case Command.placedAt:
             let placedAtPositionRawValue = commandData
             
-            if let position = XOPosition(rawValue: placedAtPositionRawValue),
-               let entity = arView.scene.findEntity(named: position.rawValue) as? ModelEntity {
+            if let position = XOPosition(rawValue: Int(placedAtPositionRawValue)!),
+               let entity = arView.scene.findEntity(named: String(position.rawValue)) as? ModelEntity {
                 DispatchQueue.main.async {
                     self.addXOEntity(in: entity, at: position, isX: self.playersModel != AssetReference.x.rawValue)
                 }
@@ -367,7 +367,7 @@ extension ViewController {
         print("addXOEntity(in entity: ModelEntity, at position: XOPosition)")
         
         let entityHasNoValue = boardEntity.children.first {
-            $0.name == position.rawValue
+            $0.name == String(position.rawValue)
         }?.children.allSatisfy { $0.name != AssetReference.x.rawValue && $0.name != AssetReference.o.rawValue } ?? false
         
         guard entityHasNoValue else { return }
@@ -410,7 +410,7 @@ extension ViewController {
         let tapEntity = ModelEntity(mesh: rectangle, materials: [material])
         
         tapEntity.generateCollisionShapes(recursive: true)
-        tapEntity.name = position.rawValue
+        tapEntity.name = String(position.rawValue)
         tapEntity.position = position.toPositionVector()
         
         boardEntity.addChild(tapEntity)

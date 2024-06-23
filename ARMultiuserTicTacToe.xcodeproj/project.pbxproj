@@ -17,6 +17,8 @@
 		0CCDFA76230F13570095AFDB /* MessageLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CCDFA75230F13570095AFDB /* MessageLabel.swift */; };
 		0CCDFA78230F1BF70095AFDB /* ViewController+CoachingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CCDFA77230F1BF70095AFDB /* ViewController+CoachingOverlay.swift */; };
 		1E0789952C1DEABC005C6C34 /* Board.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 1E0789942C1DEABC005C6C34 /* Board.usdz */; };
+		1EA3E3442C2748570041C9ED /* TicTacToeMLBot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EA3E3432C2748570041C9ED /* TicTacToeMLBot.swift */; };
+		1EA3E34A2C2783250041C9ED /* TicTacToeKerasModel.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 1EA3E3492C2783250041C9ED /* TicTacToeKerasModel.mlmodel */; };
 		1EC3881A2C1E385E0094EB58 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC388192C1E385E0094EB58 /* Models.swift */; };
 		1EC3881F2C1E5ED50094EB58 /* OMarker.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 1EC3881D2C1E5ED50094EB58 /* OMarker.usdz */; };
 		1EC388202C1E5ED50094EB58 /* XMarker.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 1EC3881E2C1E5ED50094EB58 /* XMarker.usdz */; };
@@ -35,6 +37,8 @@
 		0CCDFA75230F13570095AFDB /* MessageLabel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageLabel.swift; sourceTree = "<group>"; };
 		0CCDFA77230F1BF70095AFDB /* ViewController+CoachingOverlay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ViewController+CoachingOverlay.swift"; sourceTree = "<group>"; };
 		1E0789942C1DEABC005C6C34 /* Board.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = Board.usdz; sourceTree = "<group>"; };
+		1EA3E3432C2748570041C9ED /* TicTacToeMLBot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeMLBot.swift; sourceTree = "<group>"; };
+		1EA3E3492C2783250041C9ED /* TicTacToeKerasModel.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = TicTacToeKerasModel.mlmodel; sourceTree = "<group>"; };
 		1EC2B0282C1F2EEB0091532F /* Readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Readme.md; sourceTree = "<group>"; };
 		1EC388192C1E385E0094EB58 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		1EC3881D2C1E5ED50094EB58 /* OMarker.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = OMarker.usdz; sourceTree = "<group>"; };
@@ -86,6 +90,8 @@
 				0C34B3D723077FC5005DB76E /* LaunchScreen.storyboard */,
 				0C34B3DA23077FC5005DB76E /* Info.plist */,
 				1EC388192C1E385E0094EB58 /* Models.swift */,
+				1EA3E3432C2748570041C9ED /* TicTacToeMLBot.swift */,
+				1EA3E3492C2783250041C9ED /* TicTacToeKerasModel.mlmodel */,
 			);
 			path = ARMultiuserTicTacToe;
 			sourceTree = "<group>";
@@ -164,6 +170,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1EA3E3442C2748570041C9ED /* TicTacToeMLBot.swift in Sources */,
+				1EA3E34A2C2783250041C9ED /* TicTacToeKerasModel.mlmodel in Sources */,
 				0C968A51230CB2EA00B415B3 /* MultipeerSession.swift in Sources */,
 				0C34B3CF23077FC2005DB76E /* ViewController.swift in Sources */,
 				0CCDFA76230F13570095AFDB /* MessageLabel.swift in Sources */,
