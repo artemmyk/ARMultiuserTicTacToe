@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Ha4-mk-x4K">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
         <!--ARView-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" userLabel="ARView" customClass="ViewController" customModule="ARMultiuserTicTacToe" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ViewController" id="BYZ-38-t0r" userLabel="ARView" customClass="ViewController" customModule="ARMultiuserTicTacToe" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC" userLabel="ARView" customClass="ARView" customModule="RealityKit">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -56,11 +57,30 @@
                                     <action selector="startGameHandler" destination="BYZ-38-t0r" eventType="touchUpInside" id="VIF-Pe-I6n"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="bottom" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QZq-hX-txj" userLabel="Go back Button">
+                                <rect key="frame" x="5" y="113" width="44" height="59"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="59" id="DcS-Z1-XRq"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="44" id="YhP-ov-uZX"/>
+                                    <constraint firstAttribute="width" constant="44" id="gnh-uj-buy"/>
+                                    <constraint firstAttribute="height" constant="59" id="zUG-Ca-OWM"/>
+                                </constraints>
+                                <color key="tintColor" systemColor="systemBackgroundColor"/>
+                                <inset key="contentEdgeInsets" minX="8" minY="0.0" maxX="0.0" maxY="12"/>
+                                <state key="normal" image="arrow.backward" catalog="system"/>
+                                <state key="selected" image="restartPressed"/>
+                                <state key="highlighted" image="restartPressed"/>
+                                <connections>
+                                    <action selector="goBackPressed" destination="BYZ-38-t0r" eventType="touchUpInside" id="8Bb-jG-Jaz"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="QZq-hX-txj" firstAttribute="top" secondItem="Dzn-77-jOS" secondAttribute="bottom" id="DkN-Ed-mwf"/>
                             <constraint firstItem="Dzn-77-jOS" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="5" id="J33-yL-U4r"/>
+                            <constraint firstItem="QZq-hX-txj" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="5" id="Prt-JG-VeH"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="gwg-iX-fNL" secondAttribute="trailing" constant="5" id="VJC-Qq-yLh"/>
                             <constraint firstItem="r46-Z0-vEO" firstAttribute="top" secondItem="Dzn-77-jOS" secondAttribute="bottom" id="aXh-8z-jS6"/>
                             <constraint firstItem="Dzn-77-jOS" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="5" id="eN0-G7-uDw"/>
@@ -69,6 +89,7 @@
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="r46-Z0-vEO" secondAttribute="trailing" constant="5" id="r3R-QF-Y5O"/>
                         </constraints>
                     </view>
+                    <navigationItem key="navigationItem" id="6Ep-XQ-1Ws"/>
                     <connections>
                         <outlet property="arView" destination="8bC-Xf-vdC" id="TPV-4x-avp"/>
                         <outlet property="messageLabel" destination="Dzn-77-jOS" id="xgB-wi-khC"/>
@@ -152,14 +173,63 @@
             </objects>
             <point key="canvasLocation" x="138" y="809"/>
         </scene>
+        <!--Menu View Controller-->
+        <scene sceneID="pKW-HC-iBt">
+            <objects>
+                <viewController storyboardIdentifier="MenuViewController" id="Ha4-mk-x4K" customClass="MenuViewController" customModule="ARMultiuserTicTacToe" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="u3U-5Z-CK3">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2VJ-ht-Ofp">
+                                <rect key="frame" x="142" y="388" width="130" height="35"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="130" id="R1y-LA-pwd"/>
+                                </constraints>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Single player"/>
+                                <connections>
+                                    <action selector="singlePlayerButtonTapped" destination="Ha4-mk-x4K" eventType="touchUpInside" id="Ohg-m1-3SW"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="lwY-e8-CaS">
+                                <rect key="frame" x="142" y="473" width="130" height="35"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="130" id="uDn-6X-MxG"/>
+                                </constraints>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Multiplayer"/>
+                                <connections>
+                                    <action selector="multiPlayerButtonTapped" destination="Ha4-mk-x4K" eventType="touchUpInside" id="hW2-Zl-Tvs"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="4QK-Tv-REK"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="2VJ-ht-Ofp" firstAttribute="centerX" secondItem="u3U-5Z-CK3" secondAttribute="centerX" id="4HM-Fw-M0u"/>
+                            <constraint firstItem="lwY-e8-CaS" firstAttribute="centerX" secondItem="u3U-5Z-CK3" secondAttribute="centerX" id="Pm9-oc-IK9"/>
+                            <constraint firstItem="lwY-e8-CaS" firstAttribute="top" secondItem="2VJ-ht-Ofp" secondAttribute="bottom" constant="50" id="Uw7-ej-rIX"/>
+                            <constraint firstItem="2VJ-ht-Ofp" firstAttribute="centerY" secondItem="u3U-5Z-CK3" secondAttribute="centerY" constant="-42.5" id="ucC-kM-iVt"/>
+                        </constraints>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="PKb-0B-vhd" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1172" y="134"/>
+        </scene>
     </scenes>
     <designables>
         <designable name="3ov-Hu-Mrg"/>
         <designable name="Dzn-77-jOS"/>
     </designables>
     <resources>
+        <image name="arrow.backward" catalog="system" width="128" height="95"/>
         <image name="play" catalog="system" width="117" height="128"/>
         <image name="restart" width="20" height="20"/>
         <image name="restartPressed" width="16" height="16"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
     </resources>
 </document>
