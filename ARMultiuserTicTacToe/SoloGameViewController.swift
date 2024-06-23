@@ -32,6 +32,8 @@ class SoloGameViewController: UIViewController {
     private var cancellables: Set<AnyCancellable> = []
     
     var boardEntity: ModelEntity!
+    var xEntity: ModelEntity!
+    var oEntity: ModelEntity!
     var gameAnchor: AnchorEntity?
     
     var isGameOver = false
@@ -68,7 +70,9 @@ class SoloGameViewController: UIViewController {
         
         arView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap(recognizer:))))
         
-        addBoardEntity(in: arView.scene, arView: arView)
+        loadBoardEntity()
+        loadXModel()
+        loadOModel()
         
         messageLabel.displayMessage("Invite others to launch this app to join you.")
     }
@@ -236,9 +240,9 @@ extension SoloGameViewController: ARSessionDelegate {
 
 // MARK: - ModelEntities
 extension SoloGameViewController {
-    func addBoardEntity(in scene: RealityKit.Scene, arView: ARView) {
-        print("addBoardEntity(in scene: RealityKit.Scene, arView: ARView)")
-        
+    func loadBoardEntity() {
+        print("loadBoardEntity()")
+                
         ModelEntity.loadModelAsync(named: AssetReference.board.rawValue)
             .sink(
                 receiveCompletion: { completion in },
@@ -249,6 +253,50 @@ extension SoloGameViewController {
                     entity.generateCollisionShapes(recursive: true)
                     
                     self.boardEntity = entity
+                }
+            )
+            .store(in: &cancellables)
+    }
+    
+    func loadXModel() {
+        let modelName = AssetReference.x.rawValue
+        ModelEntity.loadModelAsync(named: modelName)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    self?.isLoadingXOEntity = false
+                    
+                    switch completion {
+                    case .failure(let err): print(err.localizedDescription)
+                    default: return
+                    }
+                },
+                receiveValue: { [weak self] xoEntity in
+                    guard let self = self else { return }
+                    xoEntity.name = modelName
+                    
+                    self.xEntity = xoEntity
+                }
+            )
+            .store(in: &cancellables)
+    }   
+    
+    func loadOModel() {
+        let modelName = AssetReference.o.rawValue
+        ModelEntity.loadModelAsync(named: modelName)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    self?.isLoadingXOEntity = false
+                    
+                    switch completion {
+                    case .failure(let err): print(err.localizedDescription)
+                    default: return
+                    }
+                },
+                receiveValue: { [weak self] xoEntity in
+                    guard let self = self else { return }
+                    xoEntity.name = modelName
+                    
+                    self.oEntity = xoEntity
                 }
             )
             .store(in: &cancellables)
@@ -265,33 +313,18 @@ extension SoloGameViewController {
         isLoadingXOEntity = true
         
         let modelName = (isX ? AssetReference.x : AssetReference.o).rawValue
-        ModelEntity.loadModelAsync(named: modelName)
-            .sink(
-                receiveCompletion: { [weak self] completion in
-                    self?.isLoadingXOEntity = false
-                    
-                    switch completion {
-                    case .failure(let err): print(err.localizedDescription)
-                    default: return
-                    }
-                },
-                receiveValue: { [weak self] xoEntity in
-                    guard let self = self else { return }
-                    xoEntity.name = modelName
-                    entity.addChild(xoEntity)
-                    
-                    self.boardValues[position] = XOModel(isX: isX, entity: xoEntity)
-                    
-                    self.isPlayersTurn.toggle()
-                    messageLabel.displayMessage("It's your\(self.isPlayersTurn ? "" : " opponent's") turn.")
-                    
-                    self.checkGameStatus()
-                    self.isLoadingXOEntity = false
-                }
-            )
-            .store(in: &cancellables)
+        let xoEntity = isX ? xEntity!.clone(recursive: false) : oEntity!.clone(recursive: false)
+        
+        entity.addChild(xoEntity)
+        
+        self.boardValues[position] = XOModel(isX: isX, entity: xoEntity)
+        
+        self.isPlayersTurn.toggle()
+        messageLabel.displayMessage("It's your\(self.isPlayersTurn ? "" : " opponent's") turn.")
+        
+        self.checkGameStatus()
+        self.isLoadingXOEntity = false
     }
-    
     
     func generateTapEntity(in position: XOPosition) {
         print("generateTapEntity(in position: XOPosition)")
@@ -352,7 +385,7 @@ extension SoloGameViewController {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
             guard let self = self else { return }
-            addBoardEntity(in: arView.scene, arView: arView)
+            loadBoardEntity()
             self.gameAnchor = nil
         }
         
