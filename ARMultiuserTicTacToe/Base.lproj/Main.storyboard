@@ -41,22 +41,6 @@
                                     <action selector="restartGameHandler" destination="BYZ-38-t0r" eventType="touchUpInside" id="5OQ-qa-NbB"/>
                                 </connections>
                             </button>
-                            <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="bottom" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gwg-iX-fNL" userLabel="Restart Experience Button Icon">
-                                <rect key="frame" x="365" y="172" width="44" height="59"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="44" id="3uP-RD-7an"/>
-                                    <constraint firstAttribute="height" constant="59" id="6uH-5W-NlG"/>
-                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="59" id="dSW-tt-8v5"/>
-                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="44" id="uIA-Pw-cdu"/>
-                                </constraints>
-                                <inset key="contentEdgeInsets" minX="8" minY="0.0" maxX="0.0" maxY="12"/>
-                                <state key="normal" image="play" catalog="system"/>
-                                <state key="selected" image="restartPressed"/>
-                                <state key="highlighted" image="restartPressed"/>
-                                <connections>
-                                    <action selector="startGameHandler" destination="BYZ-38-t0r" eventType="touchUpInside" id="VIF-Pe-I6n"/>
-                                </connections>
-                            </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="bottom" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QZq-hX-txj" userLabel="Go back Button">
                                 <rect key="frame" x="5" y="113" width="44" height="59"/>
                                 <constraints>
@@ -81,11 +65,9 @@
                             <constraint firstItem="QZq-hX-txj" firstAttribute="top" secondItem="Dzn-77-jOS" secondAttribute="bottom" id="DkN-Ed-mwf"/>
                             <constraint firstItem="Dzn-77-jOS" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="5" id="J33-yL-U4r"/>
                             <constraint firstItem="QZq-hX-txj" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="5" id="Prt-JG-VeH"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="gwg-iX-fNL" secondAttribute="trailing" constant="5" id="VJC-Qq-yLh"/>
                             <constraint firstItem="r46-Z0-vEO" firstAttribute="top" secondItem="Dzn-77-jOS" secondAttribute="bottom" id="aXh-8z-jS6"/>
                             <constraint firstItem="Dzn-77-jOS" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="5" id="eN0-G7-uDw"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="Dzn-77-jOS" secondAttribute="trailing" constant="5" id="hAM-Bb-6Yj"/>
-                            <constraint firstItem="gwg-iX-fNL" firstAttribute="top" secondItem="r46-Z0-vEO" secondAttribute="bottom" id="lh9-Xl-qdG"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="r46-Z0-vEO" secondAttribute="trailing" constant="5" id="r3R-QF-Y5O"/>
                         </constraints>
                     </view>
@@ -94,84 +76,11 @@
                         <outlet property="arView" destination="8bC-Xf-vdC" id="TPV-4x-avp"/>
                         <outlet property="messageLabel" destination="Dzn-77-jOS" id="xgB-wi-khC"/>
                         <outlet property="restartButton" destination="r46-Z0-vEO" id="tHi-cZ-coI"/>
-                        <outlet property="startButton" destination="gwg-iX-fNL" id="A6u-3b-dtu"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="138" y="134"/>
-        </scene>
-        <!--ARView-->
-        <scene sceneID="HcV-cJ-7nw">
-            <objects>
-                <viewController id="VsQ-62-8OB" userLabel="ARView" customClass="SoloGameViewController" customModule="ARMultiuserTicTacToe" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="vcF-fR-QTW" userLabel="ARView" customClass="ARView" customModule="RealityKit">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3ov-Hu-Mrg" customClass="MessageLabel" customModule="ARMultiuserTicTacToe" customModuleProvider="target">
-                                <rect key="frame" x="5" y="53" width="404" height="60"/>
-                                <color key="backgroundColor" red="0.6922967941" green="0.6922967941" blue="0.6922967941" alpha="0.88345296959999997" colorSpace="custom" customColorSpace="displayP3"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="60" id="sTM-UG-QJQ"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="bottom" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tyY-h1-s0A" userLabel="Restart Experience Button Icon">
-                                <rect key="frame" x="365" y="113" width="44" height="59"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="44" id="pgd-wl-i0d"/>
-                                    <constraint firstAttribute="height" constant="59" id="zTi-7C-hbs"/>
-                                </constraints>
-                                <inset key="contentEdgeInsets" minX="8" minY="0.0" maxX="0.0" maxY="12"/>
-                                <state key="normal" image="restart"/>
-                                <state key="selected" image="restartPressed"/>
-                                <state key="highlighted" image="restartPressed"/>
-                                <connections>
-                                    <action selector="restartGameHandler" destination="VsQ-62-8OB" eventType="touchUpInside" id="Gql-c0-VaT"/>
-                                </connections>
-                            </button>
-                            <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="bottom" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="61l-5n-huU" userLabel="Restart Experience Button Icon">
-                                <rect key="frame" x="365" y="172" width="44" height="59"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="59" id="52z-4D-sFh"/>
-                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="59" id="aFS-Nq-6uY"/>
-                                    <constraint firstAttribute="width" constant="44" id="jcW-2r-f8w"/>
-                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="44" id="xi0-09-Sei"/>
-                                </constraints>
-                                <inset key="contentEdgeInsets" minX="8" minY="0.0" maxX="0.0" maxY="12"/>
-                                <state key="normal" image="play" catalog="system"/>
-                                <state key="selected" image="restartPressed"/>
-                                <state key="highlighted" image="restartPressed"/>
-                                <connections>
-                                    <action selector="startGameHandler" destination="VsQ-62-8OB" eventType="touchUpInside" id="HeL-ts-mBC"/>
-                                </connections>
-                            </button>
-                        </subviews>
-                        <viewLayoutGuide key="safeArea" id="0eD-eF-WIg"/>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                        <constraints>
-                            <constraint firstItem="3ov-Hu-Mrg" firstAttribute="top" secondItem="0eD-eF-WIg" secondAttribute="top" constant="5" id="4xL-Ta-LWy"/>
-                            <constraint firstItem="3ov-Hu-Mrg" firstAttribute="leading" secondItem="0eD-eF-WIg" secondAttribute="leading" constant="5" id="5NN-w0-pNx"/>
-                            <constraint firstItem="61l-5n-huU" firstAttribute="top" secondItem="tyY-h1-s0A" secondAttribute="bottom" id="7jA-ip-Ojp"/>
-                            <constraint firstItem="0eD-eF-WIg" firstAttribute="trailing" secondItem="61l-5n-huU" secondAttribute="trailing" constant="5" id="bgn-7e-QTk"/>
-                            <constraint firstItem="tyY-h1-s0A" firstAttribute="top" secondItem="3ov-Hu-Mrg" secondAttribute="bottom" id="c62-IZ-iDC"/>
-                            <constraint firstItem="0eD-eF-WIg" firstAttribute="trailing" secondItem="tyY-h1-s0A" secondAttribute="trailing" constant="5" id="lFE-ZV-d6J"/>
-                            <constraint firstItem="0eD-eF-WIg" firstAttribute="trailing" secondItem="3ov-Hu-Mrg" secondAttribute="trailing" constant="5" id="lak-e4-qwz"/>
-                        </constraints>
-                    </view>
-                    <connections>
-                        <outlet property="arView" destination="vcF-fR-QTW" id="haF-Mz-QmV"/>
-                        <outlet property="messageLabel" destination="3ov-Hu-Mrg" id="op0-5a-h15"/>
-                        <outlet property="restartButton" destination="tyY-h1-s0A" id="SfU-ML-Ard"/>
-                        <outlet property="startButton" destination="61l-5n-huU" id="P24-x3-GU3"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="bK0-yG-gu4" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="138" y="809"/>
         </scene>
         <!--Menu View Controller-->
         <scene sceneID="pKW-HC-iBt">
@@ -220,12 +129,10 @@
         </scene>
     </scenes>
     <designables>
-        <designable name="3ov-Hu-Mrg"/>
         <designable name="Dzn-77-jOS"/>
     </designables>
     <resources>
         <image name="arrow.backward" catalog="system" width="128" height="95"/>
-        <image name="play" catalog="system" width="117" height="128"/>
         <image name="restart" width="20" height="20"/>
         <image name="restartPressed" width="16" height="16"/>
         <systemColor name="systemBackgroundColor">

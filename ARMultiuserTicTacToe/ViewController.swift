@@ -17,7 +17,6 @@ class ViewController: UIViewController {
     @IBOutlet var arView: ARView!
     @IBOutlet weak var messageLabel: MessageLabel!
     @IBOutlet weak var restartButton: UIButton!
-    @IBOutlet weak var startButton: UIButton!
     
     var isSingleGame = false
     var multipeerSession: MultipeerSession?
@@ -61,23 +60,54 @@ class ViewController: UIViewController {
         sessionIDObservation = observe(\.arView.session.identifier, options: [.new]) { object, change in
             print("SessionID changed to: \(change.newValue!)")
             guard let multipeerSession = self.multipeerSession else { return }
-            self.sendARSessionIDTo(peers: multipeerSession.connectedPeers)
+            self.sendCommand(.sessionID, data: self.arView.session.identifier.uuidString)
         }
         
         setupCoachingOverlay()
         
         if isSingleGame {
             ticTacToeMLBot = TicTacToeMLBot()
+            messageLabel.displayMessage("Tap on a surface to place the grid and start the game.")
         } else {
             multipeerSession = MultipeerSession(delegate: self)
+            messageLabel.displayMessage("Invite others to launch this app to join you.")
         }
         
         UIApplication.shared.isIdleTimerDisabled = true
         arView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap(recognizer:))))
         
         addBoardEntity(in: arView.scene, arView: arView)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
         
-        messageLabel.displayMessage("Invite others to launch this app to join you.")
+        arView.session.pause()
+        
+        sessionIDObservation?.invalidate()
+        sessionIDObservation = nil
+        
+        UIApplication.shared.isIdleTimerDisabled = false
+        
+        multipeerSession = nil
+        ticTacToeMLBot = nil
+        
+        if let gestureRecognizers = arView.gestureRecognizers {
+            for recognizer in gestureRecognizers {
+                arView.removeGestureRecognizer(recognizer)
+            }
+        }
+        
+        arView.scene.anchors.removeAll()
+        boardValues.removeAll()
+        cancellables.removeAll()
+        
+        isGameOver = false
+        isLoadingXOEntity = false
+        isPlayersTurn = false
+        playersModel = nil
+        
+        gameAnchor = nil
     }
     
     @objc
@@ -149,17 +179,6 @@ class ViewController: UIViewController {
 
 // MARK: - Data Communication
 extension ViewController {
-    
-    private func sendARSessionIDTo(peers: [MCPeerID]) {
-        print("sendARSessionIDTo(peers: [MCPeerID])")
-        
-        guard let multipeerSession = multipeerSession else { return }
-        let idString = arView.session.identifier.uuidString
-        let command = "SessionID:" + idString
-        if let commandData = command.data(using: .utf8) {
-            multipeerSession.sendToPeers(commandData, reliably: true, peers: peers)
-        }
-    }
     
     func sendCommand(_ command: Command, data: String? = nil) {
         print("sendCommand(_ command: Command, data: String)")
@@ -236,10 +255,6 @@ extension ViewController: ARSessionDelegate {
                 
                 arView.scene.addAnchor(anchorEntity)
                 gameAnchor = anchorEntity
-                
-//                startButton.isHidden = false
-//                messageLabel.displayMessage("Press the start button to start the game.")
-//                startGameHandler()
             }
         }
     }
@@ -350,6 +365,7 @@ extension ViewController: MultipeerSessionDelegate {
             return true
         }
     }
+    
     /// - Tag: PeerJoined
     func peerJoined(_ peer: MCPeerID) {
         print("peerDiscovered(_ peer: MCPeerID) -> Bool")
@@ -452,7 +468,7 @@ extension ViewController {
 
 // MARK: - Game State
 extension ViewController {
-    @IBAction func startGameHandler() {
+    func startGameHandler() {
         print("startGameHandler()")
         
         startGame()
@@ -468,7 +484,6 @@ extension ViewController {
                 
         playersModel = AssetReference.o.rawValue
         isPlayersTurn = false
-        startButton.isHidden = true
 
         XOPosition.allCases.forEach(generateTapEntity)
         messageLabel.displayMessage("It's your opponent's turn.")
