@@ -58,16 +58,35 @@
                                     <action selector="goBackPressed" destination="BYZ-38-t0r" eventType="touchUpInside" id="8Bb-jG-Jaz"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="bottom" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="12c-JW-YPL" userLabel="change mode button">
+                                <rect key="frame" x="185" y="113" width="44" height="59"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="44" id="1v2-bZ-sNb"/>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="59" id="7LV-ih-exG"/>
+                                    <constraint firstAttribute="width" constant="44" id="L8C-EN-ueI"/>
+                                    <constraint firstAttribute="height" constant="59" id="oe6-ik-xAo"/>
+                                </constraints>
+                                <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <inset key="contentEdgeInsets" minX="8" minY="0.0" maxX="0.0" maxY="12"/>
+                                <state key="normal" image="arrow.down.left.arrow.up.right.square" catalog="system"/>
+                                <state key="selected" image="restartPressed"/>
+                                <state key="highlighted" image="restartPressed"/>
+                                <connections>
+                                    <action selector="showGameModeSelection" destination="BYZ-38-t0r" eventType="touchUpInside" id="eQq-xu-mTL"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="12c-JW-YPL" firstAttribute="top" secondItem="Dzn-77-jOS" secondAttribute="bottom" id="1EU-Cf-Zoe"/>
                             <constraint firstItem="QZq-hX-txj" firstAttribute="top" secondItem="Dzn-77-jOS" secondAttribute="bottom" id="DkN-Ed-mwf"/>
                             <constraint firstItem="Dzn-77-jOS" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="5" id="J33-yL-U4r"/>
                             <constraint firstItem="QZq-hX-txj" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="5" id="Prt-JG-VeH"/>
                             <constraint firstItem="r46-Z0-vEO" firstAttribute="top" secondItem="Dzn-77-jOS" secondAttribute="bottom" id="aXh-8z-jS6"/>
                             <constraint firstItem="Dzn-77-jOS" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="5" id="eN0-G7-uDw"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="Dzn-77-jOS" secondAttribute="trailing" constant="5" id="hAM-Bb-6Yj"/>
+                            <constraint firstItem="12c-JW-YPL" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="qNQ-tX-S2v"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="r46-Z0-vEO" secondAttribute="trailing" constant="5" id="r3R-QF-Y5O"/>
                         </constraints>
                     </view>
@@ -133,6 +152,7 @@
     </designables>
     <resources>
         <image name="arrow.backward" catalog="system" width="128" height="95"/>
+        <image name="arrow.down.left.arrow.up.right.square" catalog="system" width="128" height="114"/>
         <image name="restart" width="20" height="20"/>
         <image name="restartPressed" width="16" height="16"/>
         <systemColor name="systemBackgroundColor">

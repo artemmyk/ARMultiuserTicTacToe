@@ -18,7 +18,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var messageLabel: MessageLabel!
     @IBOutlet weak var restartButton: UIButton!
     
-    var isSingleGame = false
+    var isSinglePlayer = false
     var multipeerSession: MultipeerSession?
     var ticTacToeMLBot: TicTacToeMLBot?
     
@@ -51,7 +51,7 @@ class ViewController: UIViewController {
         arView.automaticallyConfigureSession = false
         
         configuration = ARWorldTrackingConfiguration()
-        configuration?.isCollaborationEnabled = !isSingleGame
+        configuration?.isCollaborationEnabled = !isSinglePlayer
         configuration?.environmentTexturing = .automatic
         configuration?.frameSemantics.insert(.personSegmentationWithDepth)
         
@@ -65,13 +65,7 @@ class ViewController: UIViewController {
         
         setupCoachingOverlay()
         
-        if isSingleGame {
-            ticTacToeMLBot = TicTacToeMLBot()
-            messageLabel.displayMessage("Tap on a surface to place the grid and start the game.")
-        } else {
-            multipeerSession = MultipeerSession(delegate: self)
-            messageLabel.displayMessage("Invite others to launch this app to join you.")
-        }
+        modeDependentSetup()
         
         UIApplication.shared.isIdleTimerDisabled = true
         arView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap(recognizer:))))
@@ -177,13 +171,51 @@ class ViewController: UIViewController {
     
 }
 
+extension ViewController: GameModeSelectionDelegate, UIPopoverPresentationControllerDelegate {
+    @IBAction func showGameModeSelection() {
+        let gameModeVC = GameModeViewController()
+        gameModeVC.delegate = self
+        gameModeVC.modalPresentationStyle = .popover
+        gameModeVC.preferredContentSize = CGSize(width: 200, height: 100)
+        
+        if let popoverController = gameModeVC.popoverPresentationController {
+            popoverController.delegate = self
+            popoverController.sourceView = self.view
+            popoverController.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
+            popoverController.permittedArrowDirections = []
+        }
+        
+        present(gameModeVC, animated: true, completion: nil)
+    }
+    
+    func didSelectGameMode(isSinglePlayer: Bool) {
+        if isSinglePlayer != self.isSinglePlayer {
+            self.isSinglePlayer = isSinglePlayer
+            self.restartGameHandler()
+            self.modeDependentSetup()
+        }
+    }
+    
+    func modeDependentSetup() {
+        if isSinglePlayer {
+            ticTacToeMLBot = TicTacToeMLBot()
+            multipeerSession = nil
+            messageLabel.displayMessage("Tap on a surface to place the grid and start the game.")
+        } else {
+            ticTacToeMLBot = nil
+            multipeerSession = MultipeerSession(delegate: self)
+            messageLabel.displayMessage("Invite others to launch this app to join you.")
+        }
+    }
+}
+
 // MARK: - Data Communication
 extension ViewController {
     
     func sendCommand(_ command: Command, data: String? = nil) {
         print("sendCommand(_ command: Command, data: String)")
         
-        if isSingleGame {
+        if isSinglePlayer {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 self.receiveCommand(command, commandData: data)
             }
@@ -366,7 +398,6 @@ extension ViewController: MultipeerSessionDelegate {
         }
     }
     
-    /// - Tag: PeerJoined
     func peerJoined(_ peer: MCPeerID) {
         print("peerDiscovered(_ peer: MCPeerID) -> Bool")
         
@@ -381,6 +412,7 @@ extension ViewController: MultipeerSessionDelegate {
     func peerLeft(_ peer: MCPeerID) {
         print("peerLeft(_ peer: MCPeerID)")
         
+        restartGame()
         messageLabel.displayMessage("A peer has left the shared experience.")
         
         // Remove all ARAnchors associated with the peer that just left the experience.

@@ -22,7 +22,7 @@ class MenuViewController: UIViewController {
     private func presentGameViewController(isSingleGame: Bool) {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         if let gameVC = storyboard.instantiateViewController(withIdentifier: "ViewController") as? ViewController {
-            gameVC.isSingleGame = isSingleGame
+            gameVC.isSinglePlayer = isSingleGame
             gameVC.modalPresentationStyle = .fullScreen
             present(gameVC, animated: true, completion: nil)
         }
