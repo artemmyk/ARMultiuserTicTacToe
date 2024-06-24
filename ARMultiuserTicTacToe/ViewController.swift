@@ -417,7 +417,7 @@ extension ViewController: MultipeerSessionDelegate {
         print("peerLeft(_ peer: MCPeerID)")
         
         restartGame()
-        messageLabel.displayMessage("A peer has left the shared experience. You can change the game mode to single game or wait for another opponent to join.")
+        messageLabel.displayMessage("An opponent has left. Change the game mode or wait for another opponent.")
         
         // Remove all ARAnchors associated with the peer that just left the experience.
         if let sessionID = peerSessionIDs[peer] {
