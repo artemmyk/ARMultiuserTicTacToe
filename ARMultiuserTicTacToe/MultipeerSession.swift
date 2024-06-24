@@ -43,6 +43,16 @@ class MultipeerSession: NSObject {
         serviceBrowser.startBrowsingForPeers()
     }
     
+    deinit {
+        serviceAdvertiser.stopAdvertisingPeer()
+        serviceBrowser.stopBrowsingForPeers()
+        session.disconnect()
+        
+        serviceAdvertiser = nil
+        serviceBrowser = nil
+        session = nil
+    }
+    
     func sendToAllPeers(_ data: Data, reliably: Bool) {
         sendToPeers(data, reliably: reliably, peers: connectedPeers)
     }

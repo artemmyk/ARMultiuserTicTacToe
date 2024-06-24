@@ -36,6 +36,7 @@ class ViewController: UIViewController {
     private var playersModel: String?
     private var boardValues = [XOPosition: XOModel]()
     private var cancellables: Set<AnyCancellable> = []
+    private var canPlaceBoard = false
     
     var boardEntity: ModelEntity!
     var gameAnchor: AnchorEntity?
@@ -112,7 +113,7 @@ class ViewController: UIViewController {
         
         let results = arView.raycast(from: location, allowing: .estimatedPlane, alignment: .any)
         if let firstResult = results.first {
-            if gameAnchor == nil {
+            if gameAnchor == nil && canPlaceBoard {
                 let anchor = ARAnchor(name: "Anchor for object placement", transform: firstResult.worldTransform)
                 arView.session.add(anchor: anchor)
                 
@@ -171,6 +172,7 @@ class ViewController: UIViewController {
     
 }
 
+// MARK: - Game Mode Change
 extension ViewController: GameModeSelectionDelegate, UIPopoverPresentationControllerDelegate {
     @IBAction func showGameModeSelection() {
         let gameModeVC = GameModeViewController()
@@ -191,7 +193,7 @@ extension ViewController: GameModeSelectionDelegate, UIPopoverPresentationContro
     func didSelectGameMode(isSinglePlayer: Bool) {
         if isSinglePlayer != self.isSinglePlayer {
             self.isSinglePlayer = isSinglePlayer
-            self.restartGameHandler()
+            self.restartGame()
             self.modeDependentSetup()
         }
     }
@@ -266,18 +268,18 @@ extension ViewController: ARSessionDelegate {
         
         for anchor in anchors {
             if let participantAnchor = anchor as? ARParticipantAnchor {
-                let anchorEntity = AnchorEntity(anchor: participantAnchor)
-                
-                let coordinateSystem = MeshResource.generateCoordinateSystemAxes()
-                anchorEntity.addChild(coordinateSystem)
-                
-                let color = participantAnchor.sessionIdentifier?.toRandomColor() ?? .white
-                let coloredSphere = ModelEntity(mesh: MeshResource.generateSphere(radius: 0.03),
-                                                materials: [SimpleMaterial(color: color, isMetallic: true)])
-                anchorEntity.addChild(coloredSphere)
-                
-                arView.scene.addAnchor(anchorEntity)
-                
+//                let anchorEntity = AnchorEntity(anchor: participantAnchor)
+//                
+//                let coordinateSystem = MeshResource.generateCoordinateSystemAxes()
+//                anchorEntity.addChild(coordinateSystem)
+//                
+//                let color = participantAnchor.sessionIdentifier?.toRandomColor() ?? .white
+//                let coloredSphere = ModelEntity(mesh: MeshResource.generateSphere(radius: 0.03),
+//                                                materials: [SimpleMaterial(color: color, isMetallic: true)])
+//                anchorEntity.addChild(coloredSphere)
+//                
+//                arView.scene.addAnchor(anchorEntity)
+//                
                 messageLabel.displayMessage("An opponent has joined. Tap the screen to place the grid.")
             } else if anchor.name == "Anchor for object placement" {
                 let anchorEntity = AnchorEntity(anchor: anchor)
@@ -407,19 +409,23 @@ extension ViewController: MultipeerSessionDelegate {
             """)
         // Provide your session ID to the new user so they can keep track of your anchors.
         sendCommand(Command.sessionID, data: arView.session.identifier.uuidString)
+        
+        canPlaceBoard = true
     }
     
     func peerLeft(_ peer: MCPeerID) {
         print("peerLeft(_ peer: MCPeerID)")
         
         restartGame()
-        messageLabel.displayMessage("A peer has left the shared experience.")
+        messageLabel.displayMessage("A peer has left the shared experience. You can change the game mode to single game or wait for another opponent to join.")
         
         // Remove all ARAnchors associated with the peer that just left the experience.
         if let sessionID = peerSessionIDs[peer] {
             removeAllAnchorsOriginatingFromARSessionWithID(sessionID)
             peerSessionIDs.removeValue(forKey: peer)
         }
+        
+        canPlaceBoard = false
     }
 }
 
@@ -516,6 +522,7 @@ extension ViewController {
                 
         playersModel = AssetReference.o.rawValue
         isPlayersTurn = false
+        canPlaceBoard = false
 
         XOPosition.allCases.forEach(generateTapEntity)
         messageLabel.displayMessage("It's your opponent's turn.")
@@ -535,6 +542,7 @@ extension ViewController {
         isPlayersTurn = false
         boardValues.removeAll()
         isGameOver = false
+        canPlaceBoard = true
         
         guard let gameAnchor = gameAnchor else { return }
         arView.scene.removeAnchor(gameAnchor)
