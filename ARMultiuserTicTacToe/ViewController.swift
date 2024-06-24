@@ -162,14 +162,6 @@ class ViewController: UIViewController {
         }
     }
     
-    @IBAction func goBackPressed() {
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        if let menuVC = storyboard.instantiateViewController(withIdentifier: "MenuViewController") as? MenuViewController {
-            menuVC.modalPresentationStyle = .fullScreen
-            present(menuVC, animated: true, completion: nil)
-        }
-    }
-    
 }
 
 // MARK: - Game Mode Change
